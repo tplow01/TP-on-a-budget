@@ -22,7 +22,6 @@ interface Props {
 }
 
 export function BoardOverview({ state, summary, scenario, onNavigate, onReset }: Props) {
-  const negative = summary.leftover < 0
   const segments = [
     ...CATEGORIES.map((c) => ({ key: c.id, label: c.name, value: summary.byCategory[c.id], band: c.band })),
     { key: "savings", label: state.goals.savingsName || "Savings goal", value: summary.savings, band: SAVINGS_BAND },
@@ -33,37 +32,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
   const emergencyTarget = summary.totalSpending * state.goals.emergencyMonths
 
   return (
-    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|expression:78eabde89dfb|element:section|element:section|element:div">
-      {/* Headline: money left over */}
-      <section
-        data-negative={negative}
-        className="relative overflow-hidden border-4 border-foreground bg-card text-foreground shadow-[6px_6px_0_0_var(--foreground)] data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="89070701bd"
-      >
-        <div className="p-ds-lg" data-oid="8eb2897545" data-oid-text-editable="false" data-oid-text-source="expression:9ef424b51d68|element:p|element:p">
-          {negative ? (
-            <p className="font-label text-label font-bold uppercase" data-oid="11e1768883">Over budget by</p>
-          ) : (
-            <p className="font-label text-label font-bold uppercase" data-oid="61140c198d">Left over each month</p>
-          )}
-          <p className="mt-ds-xs font-display text-[64px] font-black leading-none tracking-[-0.03em]" data-oid="1189e6a415">{fmt(Math.abs(summary.leftover))}</p>
-          <p className="mt-ds-sm font-body text-body" data-oid="e7001dc511" data-oid-text-editable="false" data-oid-text-source="text|expression:c73bb8f85842|text">Left over after spending and savings, from {fmt(summary.takeHome)} take-home.</p>
-        </div>
-        <dl className="grid grid-cols-3 border-t-4 border-foreground" data-oid="3401cad661">
-          <div className="border-r-2 border-foreground px-ds-sm py-ds-sm" data-oid="972720da8a">
-            <dt className="font-caption text-caption uppercase opacity-70" data-oid="1022c2c985">Take-home</dt>
-            <dd className="font-label text-[15px] font-extrabold" data-oid="ae42e0d56a">{fmt(summary.takeHome)}</dd>
-          </div>
-          <div className="border-r-2 border-foreground px-ds-sm py-ds-sm" data-oid="ceed3f8b56">
-            <dt className="font-caption text-caption uppercase opacity-70" data-oid="6d1cee3e62">Spending</dt>
-            <dd className="font-label text-[15px] font-extrabold" data-oid="176a0c06e7">{fmt(summary.totalSpending)}</dd>
-          </div>
-          <div className="px-ds-sm py-ds-sm" data-oid="927b93208a">
-            <dt className="font-caption text-caption uppercase opacity-70" data-oid="62bd2e7e67">Saving</dt>
-            <dd className="font-label text-[15px] font-extrabold" data-oid="a42046e89a">{fmt(summary.totalSaving)}</dd>
-          </div>
-        </dl>
-      </section>
-
+    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="expression:78eabde89dfb|element:section|element:section|element:div">
       {scenario ? (
         <button
           type="button"
