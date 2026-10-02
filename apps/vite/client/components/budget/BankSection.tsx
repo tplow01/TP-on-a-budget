@@ -77,7 +77,7 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
         <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="92f3f2fa3b">Bank accounts</h3>
       </div>
 
-      <div className="space-y-ds-md p-ds-md" data-oid="a782c93308" data-oid-text-editable="false" data-oid-text-source="expression:2bb85b711c5d|expression:7d15867658ff|element:button|expression:e9858012fa7e|expression:72c51f5cbf8a">
+      <div className="space-y-ds-md p-ds-md" data-oid="a782c93308" data-oid-text-editable="false" data-oid-text-source="expression:22524e85f18e|expression:3bad8c11a5a3|element:button|expression:65cc46b2018f|expression:9cb002c7b845">
         {accounts.length === 0 ? (
           <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="53c177c8a0">
             Link a bank to fill in My money automatically from your checking and savings balances.

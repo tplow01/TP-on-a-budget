@@ -17,15 +17,26 @@ async function call<T>(action: string, extra: Record<string, unknown> = {}): Pro
   if (!supabase) throw new Error("Cloud sync isn't set up.")
   const { data, error } = await supabase.functions.invoke("plaid", { body: { action, ...extra } })
   if (error) {
-    // Surface the function's own error message when there is one.
-    const ctx = (error as { context?: Response }).context
-    if (ctx && typeof ctx.json === "function") {
-      const body = await ctx.json().catch(() => null)
-      if (body?.error) throw new Error(body.error)
+    const ctx = (error as { context?: unknown }).context
+    if (ctx instanceof Response) {
+      const status = ctx.status
+      const text = await ctx.text().catch(() => "")
+      let msg = text
+      try {
+        const b = JSON.parse(text)
+        msg = b.error ?? b.message ?? b.msg ?? text
+      } catch {
+        /* plain text */
+      }
+      if (status === 404)
+        throw new Error("The plaid function wasn't found (404). Deploy it: supabase functions deploy plaid --no-verify-jwt")
+      if (status === 401)
+        throw new Error(`Not authorised (401): ${msg || "no details"}. If it says "Invalid JWT", redeploy with --no-verify-jwt, then sign out and back in.`)
+      throw new Error(`Bank function error (${status}): ${msg || "no details — check Supabase → Edge Functions → plaid → Logs"}`)
     }
-    throw new Error(
-      error.message.includes("Failed to send") ? "Bank connection isn't deployed yet — deploy the plaid Edge Function." : error.message,
-    )
+    if (error.name === "FunctionsFetchError" || error.message.includes("Failed to send"))
+      throw new Error("Couldn't reach the plaid function. It's probably not deployed yet: supabase functions deploy plaid --no-verify-jwt")
+    throw new Error(error.message)
   }
   return data as T
 }
