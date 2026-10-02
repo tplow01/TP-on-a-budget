@@ -15,7 +15,7 @@ import path from "path"
 // of apps/vite/package.json). Workspace sub-deps (clsx, radix-*, vaul, cmdk,
 // react-hook-form, etc.) are reached via the @vibe/ui entries crawl above.
 export default defineConfig({
-  base: "./",
+  base: "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
