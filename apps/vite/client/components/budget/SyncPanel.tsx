@@ -22,7 +22,7 @@ const STATUS_TEXT: Record<SyncStatus, string> = {
 export function SyncPanel({ configured, email, status, onSignIn, onSignOut, onRetry }: Props) {
   const failed = status === "error" || status === "offline"
   return (
-    <section className="mt-ds-lg border-4 border-foreground bg-card" data-oid="d322fc41c7" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+    <section className="mt-ds-lg border-4 border-foreground bg-card" data-oid="d322fc41c7" data-oid-component-root="true">
       <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground" data-oid="553b6995c2" data-oid-text-editable="false" data-oid-text-source="expression:6b529dba4a83|element:h2">
         {status === "local" || failed ? <CloudOff className="size-5" strokeWidth={2.5} data-oid="a3df234e06" /> : <Cloud className="size-5" strokeWidth={2.5} data-oid="c03b5022dc" />}
         <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="a706041a2b">Sync</h2>
