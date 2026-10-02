@@ -13,10 +13,10 @@ const PLAID_REDIRECT_URI = Deno.env.get("PLAID_REDIRECT_URI") // optional, for O
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
 
-const cors = {
+let cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 }
 
 const json = (body: unknown, status = 200) =>
@@ -62,7 +62,12 @@ async function listAccounts(userId: string) {
 }
 
 Deno.serve(async (req) => {
+  // Allow whatever headers the browser asks for (newer supabase-js sends extra ones).
+  const requested = req.headers.get("Access-Control-Request-Headers")
+  if (requested) cors = { ...cors, "Access-Control-Allow-Headers": requested }
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
+  // Open the function URL in a browser to check it's deployed.
+  if (req.method === "GET") return json({ ok: true, plaidEnv: PLAID_ENV, keysSet: Boolean(PLAID_CLIENT_ID && PLAID_SECRET) })
 
   try {
     if (!PLAID_CLIENT_ID || !PLAID_SECRET) return json({ error: "Plaid keys are not set. Run: supabase secrets set PLAID_CLIENT_ID=... PLAID_SECRET=..." }, 500)
