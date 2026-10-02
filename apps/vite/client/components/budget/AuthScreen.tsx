@@ -34,7 +34,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
   return (
     <main className="relative min-h-screen bg-background text-foreground" data-oid="69baf898b2" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
       <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-ds-md py-ds-3xl" data-oid="2c09789ede">
-        <section className="border-4 border-foreground bg-card" data-oid="0806ec1613" data-oid-text-editable="false" data-oid-text-source="element:div|expression:08ae0003bdc0|expression:c49cb531f8ee">
+        <section className="border-4 border-foreground bg-card" data-oid="0806ec1613" data-oid-text-editable="false" data-oid-text-source="element:div|expression:581de70fb31d|expression:383a46889f9d">
           <div className="m-ds-xs border-2 border-foreground bg-primary px-ds-md py-ds-md text-center text-primary-foreground" data-oid="f43fc2cfbd">
             <p className="font-caption text-caption uppercase" data-oid="f62ea71bf8">Sync across devices</p>
             <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="05a5968aa0">Sign in</h1>
