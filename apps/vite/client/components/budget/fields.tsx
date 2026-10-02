@@ -21,8 +21,8 @@ export function NumberInput({ value, onChange, prefix, suffix, className, id, ar
   }, [value])
 
   return (
-    <div className={cn("flex min-h-[44px] items-center rounded-md border-2 border-foreground bg-card focus-within:ring-2 focus-within:ring-ring", className)} data-oid="95987fec8a" data-oid-component-root="true" data-oid-text-editable="false" data-oid-text-source="expression:8603c59df6e6|element:input|expression:764061569295" data-oid-classname-dynamic="true">
-      {prefix ? <span className="pl-ds-sm font-caption text-caption text-muted-foreground" data-oid="b0e780eae0">{prefix}</span> : null}
+    <div className={cn("flex min-h-[56px] items-center rounded-md border-2 border-foreground bg-card focus-within:ring-2 focus-within:ring-ring", className)} data-oid="95987fec8a" data-oid-component-root="true" data-oid-text-editable="false" data-oid-text-source="expression:8483ca67ca7e|element:input|expression:2d2639bb6556" data-oid-classname-dynamic="true">
+      {prefix ? <span className="pl-ds-md font-caption text-[15px] text-muted-foreground" data-oid="b0e780eae0">{prefix}</span> : null}
       <input
         id={id}
         aria-label={ariaLabel}
@@ -36,9 +36,9 @@ export function NumberInput({ value, onChange, prefix, suffix, className, id, ar
           const n = parseFloat(v)
           onChange(Number.isFinite(n) ? n : 0)
         }}
-        className="w-full min-w-0 bg-transparent px-ds-sm py-ds-xs font-caption text-[15px] text-foreground outline-none placeholder:text-muted-foreground" data-oid="c086319685"
+        className="w-full min-w-0 bg-transparent px-ds-sm py-ds-sm font-caption text-[18px] text-foreground outline-none placeholder:text-muted-foreground" data-oid="c086319685"
       />
-      {suffix ? <span className="pr-ds-sm font-caption text-caption text-muted-foreground" data-oid="1ac4f061bf">{suffix}</span> : null}
+      {suffix ? <span className="pr-ds-md font-caption text-[15px] text-muted-foreground" data-oid="1ac4f061bf">{suffix}</span> : null}
     </div>
   )
 }
@@ -51,9 +51,9 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className="group/switch relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border-2 border-foreground bg-muted transition-colors aria-checked:bg-success" data-oid="67854cdd57" data-oid-component-root="true"
+      className="group/switch relative inline-flex h-10 w-[68px] shrink-0 items-center rounded-full border-2 border-foreground bg-muted transition-colors aria-checked:bg-success" data-oid="67854cdd57" data-oid-component-root="true"
     >
-      <span aria-hidden="true" className="absolute left-0.5 size-5 rounded-full border-2 border-foreground bg-card transition-transform group-aria-checked/switch:translate-x-5" data-oid="bde47f313b" />
+      <span aria-hidden="true" className="absolute left-1 size-7 rounded-full border-2 border-foreground bg-card transition-transform group-aria-checked/switch:translate-x-7" data-oid="bde47f313b" />
     </button>
   )
 }

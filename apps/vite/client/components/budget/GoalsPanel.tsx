@@ -39,7 +39,7 @@ export function GoalsPanel({ state, summary, actions }: Props) {
               type="text"
               value={g.savingsName}
               onChange={(e) => actions.updateGoals({ savingsName: e.target.value })}
-              className="min-h-[44px] rounded-md border-2 border-foreground bg-card px-ds-sm font-label text-[15px] font-bold uppercase outline-none focus:ring-2 focus:ring-ring" data-oid="af990eebf0"
+              className="min-h-[56px] rounded-md border-2 border-foreground bg-card px-ds-sm font-label text-[15px] font-bold uppercase outline-none focus:ring-2 focus:ring-ring" data-oid="af990eebf0"
             />
           </label>
           <div className="grid grid-cols-2 gap-ds-md" data-oid="13107c9956">
@@ -77,16 +77,16 @@ export function GoalsPanel({ state, summary, actions }: Props) {
           <div data-oid="8c29de4897">
             <p className="ds-field-label uppercase" data-oid="9f517faf50">Months of spending to cover</p>
             <div className="mt-ds-xs grid grid-cols-4 gap-ds-sm" data-oid="813f0b73be">
-              <button type="button" aria-pressed={g.emergencyMonths === 3} onClick={() => actions.updateGoals({ emergencyMonths: 3 })} className="min-h-[44px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="6ba426562c">
+              <button type="button" aria-pressed={g.emergencyMonths === 3} onClick={() => actions.updateGoals({ emergencyMonths: 3 })} className="min-h-[56px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="6ba426562c">
                 3
               </button>
-              <button type="button" aria-pressed={g.emergencyMonths === 6} onClick={() => actions.updateGoals({ emergencyMonths: 6 })} className="min-h-[44px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="5eae323a7e">
+              <button type="button" aria-pressed={g.emergencyMonths === 6} onClick={() => actions.updateGoals({ emergencyMonths: 6 })} className="min-h-[56px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="5eae323a7e">
                 6
               </button>
-              <button type="button" aria-pressed={g.emergencyMonths === 9} onClick={() => actions.updateGoals({ emergencyMonths: 9 })} className="min-h-[44px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="342738c92b">
+              <button type="button" aria-pressed={g.emergencyMonths === 9} onClick={() => actions.updateGoals({ emergencyMonths: 9 })} className="min-h-[56px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="342738c92b">
                 9
               </button>
-              <button type="button" aria-pressed={g.emergencyMonths === 12} onClick={() => actions.updateGoals({ emergencyMonths: 12 })} className="min-h-[44px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="373fd991b7">
+              <button type="button" aria-pressed={g.emergencyMonths === 12} onClick={() => actions.updateGoals({ emergencyMonths: 12 })} className="min-h-[56px] rounded-md border-2 border-foreground bg-card font-label text-[15px] font-extrabold aria-pressed:bg-foreground aria-pressed:text-card" data-oid="373fd991b7">
                 12
               </button>
             </div>

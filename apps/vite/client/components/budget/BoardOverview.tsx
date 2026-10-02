@@ -39,11 +39,11 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
         data-negative={negative}
         className="relative overflow-hidden border-4 border-foreground bg-card text-foreground shadow-[6px_6px_0_0_var(--foreground)] data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="89070701bd"
       >
-        <div className="p-ds-lg" data-oid="8eb2897545" data-oid-text-editable="false" data-oid-text-source="expression:c38878ed5826|element:p|element:p">
+        <div className="p-ds-lg" data-oid="8eb2897545" data-oid-text-editable="false" data-oid-text-source="expression:9ef424b51d68|element:p|element:p">
           {negative ? (
             <p className="font-label text-label font-bold uppercase" data-oid="11e1768883">Over budget by</p>
           ) : (
-            <p className="font-label text-label font-bold uppercase" data-oid="61140c198d">Left over this month</p>
+            <p className="font-label text-label font-bold uppercase" data-oid="61140c198d">Left over each month</p>
           )}
           <p className="mt-ds-xs font-display text-[64px] font-black leading-none tracking-[-0.03em]" data-oid="1189e6a415">{fmt(Math.abs(summary.leftover))}</p>
           <p className="mt-ds-sm font-body text-body" data-oid="e7001dc511" data-oid-text-editable="false" data-oid-text-source="text|expression:c73bb8f85842|text">Left over after spending and savings, from {fmt(summary.takeHome)} take-home.</p>
@@ -137,7 +137,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
           onClick={() => {
             if (window.confirm("Reset everything to the sample budget?")) onReset()
           }}
-          className="ds-button min-h-[40px] border-2 border-foreground bg-card" data-oid="bf2366cb7b"
+          className="ds-button min-h-[52px] border-2 border-foreground bg-card" data-oid="bf2366cb7b"
         >
           <RotateCcw className="size-4" strokeWidth={2.5} data-oid="bb14c62c64" />
           Reset
