@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Check, Pencil } from "lucide-react"
 import { motion } from "framer-motion"
+import "./hotel.css"
 
 const NUMBER_SWAP = {
   initial: { opacity: 0, y: 10, scale: 0.96 },
@@ -126,22 +127,22 @@ export function BoardHeader({ summary, compactTitle }: { summary: Summary; compa
       <div role="tablist" aria-label="Time period" className="grid grid-cols-4 gap-ds-sm pt-ds-xs" data-oid="88b925b448">
         <button type="button" role="tab" aria-selected={period === "daily"} onClick={() => setPeriod("daily")} className="group relative flex min-h-[60px] flex-col border-4 border-foreground bg-muted text-muted-foreground transition-[background-color,color,scale] duration-200 active:scale-95 aria-selected:bg-card aria-selected:text-foreground" data-oid="27539fc936">
           <span aria-hidden="true" className="h-4 w-full border-b-2 border-foreground bg-[hsl(24.4_48.7%_36.7%)]" data-oid="0231cbcdd4" />
-          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[320%] rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:duration-[520ms] group-aria-selected:ease-[cubic-bezier(0.22,1.6,0.36,1)] group-aria-selected:opacity-100" data-oid="5947a33ed8" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[260%] origin-bottom rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:animate-[hotel-settle_420ms_ease-out_340ms] group-aria-selected:duration-[460ms] group-aria-selected:ease-[cubic-bezier(0.25,1.12,0.4,1)] group-aria-selected:opacity-100" data-oid="5947a33ed8" />
           <span className="flex flex-1 items-center justify-center font-label text-label font-extrabold uppercase" data-oid="e3ab30f1c6">Day</span>
         </button>
         <button type="button" role="tab" aria-selected={period === "weekly"} onClick={() => setPeriod("weekly")} className="group relative flex min-h-[60px] flex-col border-4 border-foreground bg-muted text-muted-foreground transition-[background-color,color,scale] duration-200 active:scale-95 aria-selected:bg-card aria-selected:text-foreground" data-oid="7dbfb22a29">
           <span aria-hidden="true" className="h-4 w-full border-b-2 border-foreground bg-[hsl(206.2_71.2%_74.1%)]" data-oid="878a9f6e6e" />
-          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[320%] rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:duration-[520ms] group-aria-selected:ease-[cubic-bezier(0.22,1.6,0.36,1)] group-aria-selected:opacity-100" data-oid="b287cdc82c" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[260%] origin-bottom rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:animate-[hotel-settle_420ms_ease-out_340ms] group-aria-selected:duration-[460ms] group-aria-selected:ease-[cubic-bezier(0.25,1.12,0.4,1)] group-aria-selected:opacity-100" data-oid="b287cdc82c" />
           <span className="flex flex-1 items-center justify-center font-label text-label font-extrabold uppercase" data-oid="4762e6b750">Week</span>
         </button>
         <button type="button" role="tab" aria-selected={period === "monthly"} onClick={() => setPeriod("monthly")} className="group relative flex min-h-[60px] flex-col border-4 border-foreground bg-muted text-muted-foreground transition-[background-color,color,scale] duration-200 active:scale-95 aria-selected:bg-card aria-selected:text-foreground" data-oid="b3194f17e8">
           <span aria-hidden="true" className="h-4 w-full border-b-2 border-foreground bg-[hsl(325.9_63.3%_52%)]" data-oid="d40e4f1b91" />
-          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[320%] rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:duration-[520ms] group-aria-selected:ease-[cubic-bezier(0.22,1.6,0.36,1)] group-aria-selected:opacity-100" data-oid="1bc8a05291" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[260%] origin-bottom rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:animate-[hotel-settle_420ms_ease-out_340ms] group-aria-selected:duration-[460ms] group-aria-selected:ease-[cubic-bezier(0.25,1.12,0.4,1)] group-aria-selected:opacity-100" data-oid="1bc8a05291" />
           <span className="flex flex-1 items-center justify-center font-label text-label font-extrabold uppercase" data-oid="520946138e">Month</span>
         </button>
         <button type="button" role="tab" aria-selected={period === "yearly"} onClick={() => setPeriod("yearly")} className="group relative flex min-h-[60px] flex-col border-4 border-foreground bg-muted text-muted-foreground transition-[background-color,color,scale] duration-200 active:scale-95 aria-selected:bg-card aria-selected:text-foreground" data-oid="264bba7b68">
           <span aria-hidden="true" className="h-4 w-full border-b-2 border-foreground bg-accent" data-oid="2e2a861c8b" />
-          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[320%] rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:duration-[520ms] group-aria-selected:ease-[cubic-bezier(0.22,1.6,0.36,1)] group-aria-selected:opacity-100" data-oid="7c1cb436a9" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-4 w-7 -translate-x-1/2 -translate-y-[260%] origin-bottom rounded-t-md border-2 border-foreground bg-primary opacity-0 transition-all duration-[180ms] ease-in group-aria-selected:-translate-y-1/2 group-aria-selected:animate-[hotel-settle_420ms_ease-out_340ms] group-aria-selected:duration-[460ms] group-aria-selected:ease-[cubic-bezier(0.25,1.12,0.4,1)] group-aria-selected:opacity-100" data-oid="7c1cb436a9" />
           <span className="flex flex-1 items-center justify-center font-label text-label font-extrabold uppercase" data-oid="2f1fc387e9">Year</span>
         </button>
       </div>
