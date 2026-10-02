@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Check, Pencil } from "lucide-react"
+import { Check, Pencil, UserRound } from "lucide-react"
 import { motion } from "framer-motion"
 
 const NUMBER_SWAP = {
@@ -45,9 +45,23 @@ interface HeaderProps {
   balance: number
   onBalanceChange: (v: number) => void
   compactTitle?: string
+  /** First letter of the signed-in email, or null when signed out. */
+  profileInitial: string | null
+  onOpenProfile: () => void
 }
 
-export function BoardHeader({ summary, balance, onBalanceChange, compactTitle }: HeaderProps) {
+export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, profileInitial, onOpenProfile }: HeaderProps) {
+  const profileButton = (
+    <button
+      type="button"
+      onClick={onOpenProfile}
+      aria-label="Profile and settings"
+      className="flex size-12 shrink-0 items-center justify-center rounded-full border-4 border-foreground bg-card font-heading text-[20px] font-extrabold uppercase text-foreground transition-[scale] duration-150 active:scale-90" data-oid="3cabda1a89" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true"
+    >
+      {profileInitial ?? <UserRound className="size-6" strokeWidth={2.5} data-oid="5a580d8600" />}
+    </button>
+  )
+
   const [period, setPeriod] = useState<Period>(loadPeriod)
   const setBalance = onBalanceChange
   const [editing, setEditing] = useState(false)
@@ -68,7 +82,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle }:
   if (compactTitle) {
     return (
       <header className="sticky top-0 z-30 border-b-4 border-foreground bg-card px-ds-md pb-ds-sm pt-[64px]" data-oid="b5fbae0562" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
-        <div className="flex items-end justify-between gap-ds-md" data-oid="ebabdccfd1">
+        <div className="flex items-end justify-between gap-ds-md" data-oid="ebabdccfd1" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|expression:ecf0a98ab97c">
           <div className="min-w-0" data-oid="851ef6add4">
             <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="d979b6a48f" data-oid-text-editable="false" data-oid-text-source="text|expression:0042047ac4e0">My money · {fmt(balance)}</p>
             <h1 className="truncate font-heading text-heading font-extrabold uppercase" data-oid="7afcdc4500">{compactTitle}</h1>
@@ -80,13 +94,18 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle }:
               {money(Math.abs(leftover))}
             </p>
           </div>
+          {profileButton}
         </div>
       </header>
     )
   }
 
   return (
-    <header className="space-y-ds-md px-ds-md pb-ds-lg pt-ds-3xl" data-oid="48eb0b28ad" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+    <header className="space-y-ds-md px-ds-md pb-ds-lg pt-[60px]" data-oid="48eb0b28ad" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+      <div className="flex items-center justify-between gap-ds-sm" data-oid="48a31bce69" data-oid-text-editable="false" data-oid-text-source="element:p|expression:ecf0a98ab97c">
+        <p className="font-label text-label font-bold uppercase text-muted-foreground" data-oid="d94ae785c5">Budget</p>
+        {profileButton}
+      </div>
       {/* Total money */}
       <section className="border-4 border-foreground bg-card text-foreground" data-oid="5a8c1df47e">
         <div className="m-ds-xs border-2 border-foreground bg-primary px-ds-md py-ds-sm text-center text-primary-foreground" data-oid="06af9d7faf">
