@@ -1,4 +1,4 @@
-import { CircleHelp, RotateCcw } from "lucide-react"
+import { CircleHelp } from "lucide-react"
 import { cn } from "@vibe/ui"
 import {
   CATEGORIES,
@@ -18,10 +18,9 @@ interface Props {
   summary: Summary
   scenario: Summary | null
   onNavigate: (t: TabId) => void
-  onReset: () => void
 }
 
-export function BoardOverview({ state, summary, scenario, onNavigate, onReset }: Props) {
+export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
   const segments = [
     ...CATEGORIES.map((c) => ({ key: c.id, label: c.name, value: summary.byCategory[c.id], band: c.band })),
     { key: "savings", label: state.goals.savingsName || "Savings goal", value: summary.savings, band: SAVINGS_BAND },
@@ -101,16 +100,6 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
         <p className="font-caption text-caption text-muted-foreground" data-oid="af29f0ebb7" data-oid-text-editable="false" data-oid-text-source="text|expression:36beac470406">
           Last updated · {new Date(state.updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            if (window.confirm("Reset everything to the sample budget?")) onReset()
-          }}
-          className="ds-button min-h-[52px] border-2 border-foreground bg-card" data-oid="bf2366cb7b"
-        >
-          <RotateCcw className="size-4" strokeWidth={2.5} data-oid="bb14c62c64" />
-          Reset
-        </button>
       </div>
     </div>
   )
