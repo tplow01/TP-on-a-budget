@@ -12,7 +12,7 @@ export function TabBar({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => 
       <button type="button" role="tab" aria-selected={tab === "board"} onClick={() => onChange("board")} className="flex flex-col items-center gap-1 border-r-2 border-foreground pb-ds-xs text-muted-foreground aria-selected:bg-background aria-selected:text-foreground" data-oid="d7042af9c2">
         <span aria-hidden="true" className="h-2 w-full border-b-2 border-foreground bg-primary" data-oid="f4bb71d4eb" />
         <LayoutGrid className="mt-1 size-5" strokeWidth={2.5} data-oid="e80fe46f36" />
-        <span className="font-label text-[10px] font-bold uppercase tracking-[0.06em]" data-oid="9718462bb0">Board</span>
+        <span className="font-label text-[10px] font-bold uppercase tracking-[0.06em]" data-oid="9718462bb0">Overview</span>
       </button>
       <button type="button" role="tab" aria-selected={tab === "income"} onClick={() => onChange("income")} className="flex flex-col items-center gap-1 border-r-2 border-foreground pb-ds-xs text-muted-foreground aria-selected:bg-background aria-selected:text-foreground" data-oid="b24d133b95">
         <span aria-hidden="true" className="h-2 w-full border-b-2 border-foreground bg-[hsl(24.4_48.7%_36.7%)]" data-oid="63c5789615" />
@@ -32,7 +32,7 @@ export function TabBar({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => 
       <button type="button" role="tab" aria-selected={tab === "whatif"} onClick={() => onChange("whatif")} className="flex flex-col items-center gap-1 pb-ds-xs text-muted-foreground aria-selected:bg-background aria-selected:text-foreground" data-oid="e8d7c2c6de">
         <span aria-hidden="true" className="h-2 w-full border-b-2 border-foreground bg-accent" data-oid="f07dc3b484" />
         <CircleHelp className="mt-1 size-5" strokeWidth={2.5} data-oid="2f29379017" />
-        <span className="font-label text-[10px] font-bold uppercase tracking-[0.06em]" data-oid="d4d52503c3">Chance</span>
+        <span className="font-label text-[10px] font-bold uppercase tracking-[0.06em]" data-oid="d4d52503c3">What if</span>
       </button>
     </nav>
   )

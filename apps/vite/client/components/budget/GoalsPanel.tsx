@@ -64,12 +64,12 @@ export function GoalsPanel({ state, summary, actions }: Props) {
         </div>
       </section>
 
-      {/* Emergency fund — community chest */}
+      {/* Emergency fund */}
       <section className="border-4 border-foreground bg-card shadow-[6px_6px_0_0_var(--foreground)]" data-oid="bfdaadb4a8">
         <div className="flex items-center gap-ds-sm border-b-4 border-foreground bg-[hsl(206.2_71.2%_74.1%)] px-ds-md py-ds-sm text-foreground" data-oid="c90390d424">
           <ShieldCheck className="size-5" strokeWidth={2.5} data-oid="23329f0d31" />
           <div data-oid="2001c74558">
-            <p className="font-caption text-[10px] uppercase" data-oid="1e6d9e6886">Community chest</p>
+            <p className="font-caption text-[10px] uppercase" data-oid="1e6d9e6886">Safety net</p>
             <h3 className="font-label text-[15px] font-extrabold uppercase leading-none tracking-[0.06em]" data-oid="d944915750">Emergency fund</h3>
           </div>
         </div>

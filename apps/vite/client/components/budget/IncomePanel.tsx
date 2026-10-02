@@ -16,10 +16,10 @@ export function IncomePanel({ state, summary, actions }: Props) {
 
   return (
     <div className="space-y-ds-lg" data-oid="9b050a48a2" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
-      {/* Title deed: salary */}
+      {/* Salary */}
       <section className="border-4 border-foreground bg-card shadow-[6px_6px_0_0_var(--foreground)]" data-oid="2b3bf4c3f2">
         <div className="m-ds-sm border-2 border-foreground bg-[hsl(24.4_48.7%_36.7%)] px-ds-md py-ds-sm text-center text-primary-foreground" data-oid="e1e98239ab">
-          <p className="font-caption text-caption uppercase" data-oid="d207126a2e">Title deed</p>
+          <p className="font-caption text-caption uppercase" data-oid="d207126a2e">Income</p>
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="7a43581af7">Your salary</h2>
         </div>
 
@@ -46,7 +46,7 @@ export function IncomePanel({ state, summary, actions }: Props) {
           </label>
         </div>
 
-        {/* Deed-style rent table */}
+        {/* Take-home breakdown */}
         <dl className="mx-ds-md mb-ds-md border-t-2 border-foreground pt-ds-sm" data-oid="a7e8fdbbff">
           <div className="flex justify-between py-1" data-oid="eff2fd67e4">
             <dt className="font-body text-body" data-oid="8e23edcd4f">Gross monthly</dt>
@@ -85,7 +85,7 @@ export function IncomePanel({ state, summary, actions }: Props) {
       </section>
 
       {/* Payslip override */}
-      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="d0f63a7331" data-oid-text-editable="false" data-oid-text-source="element:div|expression:587e4af9804e">
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="d0f63a7331" data-oid-text-editable="false" data-oid-text-source="element:div|expression:13274ca6c32a">
         <div className="flex items-center gap-ds-md p-ds-md" data-oid="ff3be437d7">
           <div className="flex-1" data-oid="9060910176">
             <h3 className="font-label text-label font-bold uppercase" data-oid="1a4e9cf0e1">Use my real payslip</h3>

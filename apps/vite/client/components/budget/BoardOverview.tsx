@@ -1,4 +1,4 @@
-import { ArrowLeft, CircleHelp, RotateCcw } from "lucide-react"
+import { CircleHelp, RotateCcw } from "lucide-react"
 import { cn } from "@vibe/ui"
 import {
   CATEGORIES,
@@ -33,24 +33,20 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
   const emergencyTarget = summary.totalSpending * state.goals.emergencyMonths
 
   return (
-    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|expression:87d201217ada|element:section|element:section|element:div">
-      {/* GO tile — the headline number */}
+    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|expression:78eabde89dfb|element:section|element:section|element:div">
+      {/* Headline: money left over */}
       <section
         data-negative={negative}
         className="relative overflow-hidden border-4 border-foreground bg-card text-foreground shadow-[6px_6px_0_0_var(--foreground)] data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="89070701bd"
       >
-        <div className="p-ds-lg" data-oid="8eb2897545" data-oid-text-editable="false" data-oid-text-source="expression:d172399ec962|element:p|element:p|element:div">
+        <div className="p-ds-lg" data-oid="8eb2897545" data-oid-text-editable="false" data-oid-text-source="expression:c38878ed5826|element:p|element:p">
           {negative ? (
-            <p className="font-label text-label font-bold uppercase" data-oid="11e1768883">Go to jail — over budget by</p>
+            <p className="font-label text-label font-bold uppercase" data-oid="11e1768883">Over budget by</p>
           ) : (
-            <p className="font-label text-label font-bold uppercase" data-oid="61140c198d">Collect each month</p>
+            <p className="font-label text-label font-bold uppercase" data-oid="61140c198d">Left over this month</p>
           )}
           <p className="mt-ds-xs font-display text-[64px] font-black leading-none tracking-[-0.03em]" data-oid="1189e6a415">{fmt(Math.abs(summary.leftover))}</p>
           <p className="mt-ds-sm font-body text-body" data-oid="e7001dc511" data-oid-text-editable="false" data-oid-text-source="text|expression:c73bb8f85842|text">Left over after spending and savings, from {fmt(summary.takeHome)} take-home.</p>
-          <div className="mt-ds-md flex items-center gap-ds-sm" data-oid="71afd73d75">
-            <ArrowLeft className="size-12 text-primary data-[negative=true]:text-primary-foreground" strokeWidth={3.5} data-negative={negative} data-oid="a822458b1b" />
-            <span className="font-display text-[52px] font-black leading-none tracking-[0.04em]" data-oid="5bed24f6ac">GO</span>
-          </div>
         </div>
         <dl className="grid grid-cols-3 border-t-4 border-foreground" data-oid="3401cad661">
           <div className="border-r-2 border-foreground px-ds-sm py-ds-sm" data-oid="972720da8a">
@@ -76,7 +72,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
         >
           <CircleHelp className="size-8 shrink-0" strokeWidth={2.5} data-oid="79366ebbfe" />
           <span className="font-body text-body" data-oid="89e4a3d22e">
-            Chance card in play: you'd have <strong className="font-label font-extrabold" data-oid="80665a0766">{fmt(scenario.leftover)}</strong> left over instead.
+            Scenario active: you'd have <strong className="font-label font-extrabold" data-oid="80665a0766">{fmt(scenario.leftover)}</strong> left over instead.
           </span>
         </button>
       ) : null}

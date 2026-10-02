@@ -14,10 +14,10 @@ export function SpendingBoard({ state, summary, actions }: Props) {
   const pausedCount = state.items.filter((i) => !i.enabled).length
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:2ab820c567f1">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:a62fdb05cce4">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
-          <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Property groups</h2>
+          <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
           <p className="font-caption text-caption text-muted-foreground" data-oid="b093783693" data-oid-text-editable="false" data-oid-text-source="expression:3e9a72a5540b|text">{pausedCount} paused · toggle off instead of deleting</p>
         </div>
         <p className="font-display text-[28px] font-black leading-none" data-oid="8d753d8329">{fmt(summary.totalSpending)}</p>
@@ -39,7 +39,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id)
         return (
-          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:96c51ebaa50b|element:button">
+          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:ebedf6e4fd88|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
               <div className="flex items-baseline justify-between gap-ds-sm" data-oid="4423a87d05" data-oid-shared="true" data-oid-instance-targetable="true">
                 <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="f9eee1ccd1" data-oid-shared="true" data-oid-instance-targetable="true">{cat.name}</h3>

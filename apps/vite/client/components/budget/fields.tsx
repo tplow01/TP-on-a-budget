@@ -21,7 +21,7 @@ export function NumberInput({ value, onChange, prefix, suffix, className, id, ar
   }, [value])
 
   return (
-    <div className={cn("flex min-h-[44px] items-center rounded-md border-2 border-foreground bg-card focus-within:ring-2 focus-within:ring-ring", className)} data-oid="95987fec8a" data-oid-component-root="true" data-oid-text-editable="false" data-oid-text-source="expression:0b263d22cc25|element:input|expression:2d12316d7363" data-oid-classname-dynamic="true">
+    <div className={cn("flex min-h-[44px] items-center rounded-md border-2 border-foreground bg-card focus-within:ring-2 focus-within:ring-ring", className)} data-oid="95987fec8a" data-oid-component-root="true" data-oid-text-editable="false" data-oid-text-source="expression:8603c59df6e6|element:input|expression:764061569295" data-oid-classname-dynamic="true">
       {prefix ? <span className="pl-ds-sm font-caption text-caption text-muted-foreground" data-oid="b0e780eae0">{prefix}</span> : null}
       <input
         id={id}
