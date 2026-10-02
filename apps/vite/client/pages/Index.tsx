@@ -1,60 +1,43 @@
-/**
- * Sandbox template splash page.
- *
- * Rendered before Mercury's agent has generated real code into the sandbox,
- * OR when the agent wrote real code but parked it at a side route (e.g.
- * `/login`) and left `/` untouched. The on-page label makes that second
- * case diagnosable — without it the skeleton looks identical to a stuck
- * load. First-prompt workflows should replace this file (see AGENTS.md
- * "Home route (`/`) is special").
- */
+import { useMemo, useState } from "react"
+import { useBudget } from "../hooks/useBudget"
+import { downloadCsv, isScenarioActive, summarize } from "../lib/budget"
+import { BoardHeader } from "../components/budget/BoardHeader"
+import { BoardOverview } from "../components/budget/BoardOverview"
+import { GoalsPanel } from "../components/budget/GoalsPanel"
+import { IncomePanel } from "../components/budget/IncomePanel"
+import { SpendingBoard } from "../components/budget/SpendingBoard"
+import { TabBar, type TabId } from "../components/budget/TabBar"
+import { WhatIfPanel } from "../components/budget/WhatIfPanel"
+
 export default function Index() {
-  const widths = [72, 92, 48, 66];
+  const { state, actions } = useBudget()
+  const [tab, setTab] = useState<TabId>("board")
+  const summary = useMemo(() => summarize(state), [state])
+  const scenario = useMemo(() => summarize(state, state.whatIf), [state])
+  const scenarioActive = isScenarioActive(state.whatIf)
+
+  const go = (t: TabId) => {
+    setTab(t)
+    window.scrollTo({ top: 0 })
+  }
+
   return (
-    <main
-      className="relative min-h-screen flex items-center justify-center overflow-hidden px-6"
-      style={{ background: "#05050a" }}
-    >
-      <div className="w-full max-w-md flex flex-col gap-4" aria-hidden="true">
-        {widths.map((w, i) => (
-          <div
-            key={i}
-            className="h-3 rounded-md relative overflow-hidden"
-            style={{
-              width: `${w}%`,
-              background: "rgba(255,255,255,0.04)",
-            }}
-          >
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent 0%, rgba(167,139,250,0.22) 50%, transparent 100%)",
-                backgroundSize: "200% 100%",
-                animation: `mercury-skeleton-shimmer 1.8s linear ${i * 0.15}s infinite`,
-              }}
-            />
-          </div>
-        ))}
+    <main className="relative min-h-screen bg-background text-foreground" data-oid="542ebac72f" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+      {/* board-line grid + vignette atmosphere */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--foreground)_6%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_srgb,var(--foreground)_6%,transparent)_1px,transparent_1px)] bg-[size:36px_36px]" data-oid="dd464f7ebc" />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,transparent_40%,color-mix(in_srgb,var(--muted-foreground)_25%,transparent)_100%)]" data-oid="ff3770c16b" />
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background/70 sm:border-x-4 sm:border-foreground" data-oid="521d31b0ed">
+        <BoardHeader onExport={() => downloadCsv(state)} />
+        <div className="flex-1 px-ds-md pb-[140px]" data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:96fc6a06199a|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
+          {tab === "board" ? <BoardOverview state={state} summary={summary} scenario={scenarioActive ? scenario : null} onNavigate={go} onReset={actions.resetAll} /> : null}
+          {tab === "income" ? <IncomePanel state={state} summary={summary} actions={actions} /> : null}
+          {tab === "spend" ? <SpendingBoard state={state} summary={summary} actions={actions} /> : null}
+          {tab === "goals" ? <GoalsPanel state={state} summary={summary} actions={actions} /> : null}
+          {tab === "whatif" ? <WhatIfPanel state={state} summary={summary} scenario={scenario} actions={actions} /> : null}
+        </div>
+        <TabBar tab={tab} onChange={go} />
       </div>
-      <div
-        className="absolute bottom-6 left-0 right-0 text-center px-6"
-        style={{
-          color: "rgba(255,255,255,0.35)",
-          fontFamily:
-            "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-          fontSize: "12px",
-          letterSpacing: "0.04em",
-        }}
-      >
-        Workspace is live — this view updates when the home page for / is ready.
-      </div>
-      <style>{`
-        @keyframes mercury-skeleton-shimmer {
-          0% { background-position: -200% 0%; }
-          100% { background-position: 200% 0%; }
-        }
-      `}</style>
     </main>
-  );
+  )
 }
