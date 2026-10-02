@@ -1,3 +1,5 @@
+import { useRef, useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import { Plus, Trash2 } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, fmt, monthlyOf, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
@@ -10,12 +12,36 @@ interface Props {
   actions: BudgetActions
 }
 
+const ROW_MOTION = {
+  layout: true,
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, x: 32, transition: { duration: 0.16 } },
+  transition: { duration: 0.26, ease: [0.16, 1, 0.3, 1] as const },
+}
+
 export function SpendingBoard({ state, summary, actions }: Props) {
+  // Let the switch finish sliding before the row moves lists.
+  const [flip, setFlip] = useState<Record<string, boolean>>({})
+  const timers = useRef<Record<string, number>>({})
+  const flipItem = (id: string, enabled: boolean) => {
+    setFlip((f) => ({ ...f, [id]: enabled }))
+    window.clearTimeout(timers.current[id])
+    timers.current[id] = window.setTimeout(() => {
+      actions.updateItem(id, { enabled })
+      setFlip((f) => {
+        const next = { ...f }
+        delete next[id]
+        return next
+      })
+    }, 220)
+  }
+
   const paused = state.items.filter((i) => !i.enabled)
   const pausedCount = paused.length
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:0d51732d9ea6|expression:c6330ff39ef8">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:1c09fb99d9ec|expression:9f9a79859f37">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
@@ -50,10 +76,11 @@ export function SpendingBoard({ state, summary, actions }: Props) {
             </div>
 
             <ul className="divide-y-2 divide-foreground/15" data-oid="3baa59ff07" data-oid-shared="true" data-oid-instance-targetable="true">
+              <AnimatePresence initial={false}>
               {items.map((item, index) => (
-                <li key={item.id} data-index={index} data-enabled={item.enabled} className="group/row space-y-ds-sm px-ds-md py-ds-md data-[enabled=false]:bg-muted/40" data-oid="a5a24a0327" data-oid-shared="true">
+                <motion.li data-oid="a5a24a0327" {...ROW_MOTION} key={item.id} data-index={index} data-enabled={item.enabled} className="group/row space-y-ds-sm overflow-hidden px-ds-md py-ds-md" data-oid-shared="true" data-oid-component="a5a24a0327" data-oid-attr-dynamic="placeholder">
                   <div className="flex items-center gap-ds-sm" data-oid="d19443df9f" data-oid-shared="true" data-oid-text-editable="false">
-                    <Toggle checked={item.enabled} onChange={(v) => actions.updateItem(item.id, { enabled: v })} label={`Count ${item.name || "item"} in budget`} />
+                    <Toggle checked={flip[item.id] ?? item.enabled} onChange={(v) => flipItem(item.id, v)} label={`Count ${item.name || "item"} in budget`} />
                     <input
                       type="text"
                       value={item.name}
@@ -91,8 +118,9 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                       <span className="block font-caption text-[10px] font-normal text-muted-foreground" data-oid="e7dda15a5d" data-oid-shared="true">per month</span>
                     </output>
                   </div>
-                </li>
+                </motion.li>
               ))}
+              </AnimatePresence>
             </ul>
 
             {items.length === 0 ? <p className="px-ds-md py-ds-md font-body text-body text-muted-foreground" data-oid="a66aa635e2" data-oid-shared="true">No active costs here.</p> : null}
@@ -116,9 +144,10 @@ export function SpendingBoard({ state, summary, actions }: Props) {
             <p className="font-caption text-caption text-muted-foreground" data-oid="92113f8809">Not counted in your totals. Switch on to add back.</p>
           </div>
           <ul className="divide-y-2 divide-foreground/15" data-oid="37bc3f2965">
+            <AnimatePresence initial={false}>
             {paused.map((item, index) => (
-              <li key={item.id} data-index={index} className="flex min-h-[72px] items-center gap-ds-md px-ds-md py-ds-sm" data-oid="6a828d819b" data-oid-shared="true" data-oid-instance-targetable="true">
-                <Toggle checked={item.enabled} onChange={(v) => actions.updateItem(item.id, { enabled: v })} label={`Switch ${item.name || "item"} back on`} />
+              <motion.li data-oid="6a828d819b" {...ROW_MOTION} key={item.id} data-index={index} className="flex min-h-[72px] items-center gap-ds-md px-ds-md py-ds-sm" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-component="6a828d819b" data-oid-attr-dynamic="placeholder">
+                <Toggle checked={flip[item.id] ?? item.enabled} onChange={(v) => flipItem(item.id, v)} label={`Switch ${item.name || "item"} back on`} />
                 <div className="min-w-0 flex-1" data-oid="03940faf40" data-oid-shared="true" data-oid-instance-targetable="true">
                   <p className="truncate font-label text-[15px] font-bold uppercase tracking-[0.04em] text-muted-foreground" data-oid="0c85452ad0" data-oid-shared="true" data-oid-instance-targetable="true">{item.name || "Unnamed cost"}</p>
                   <p className="font-caption text-caption text-muted-foreground" data-oid="157f0b0241" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:c7e6c2a5ac76|text|expression:9db8a6f042ea|text">{CATEGORIES.find((c) => c.id === item.category)?.name} · {fmt(monthlyOf(item))}/mo</p>
@@ -131,8 +160,9 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                 >
                   <Trash2 className="size-5" strokeWidth={2.5} data-oid="44dec22421" data-oid-shared="true" data-oid-instance-targetable="true" />
                 </button>
-              </li>
+              </motion.li>
             ))}
+            </AnimatePresence>
           </ul>
         </section>
       ) : null}
