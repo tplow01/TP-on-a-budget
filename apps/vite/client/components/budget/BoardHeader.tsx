@@ -43,7 +43,7 @@ function loadBalance(): number {
   return 12500
 }
 
-export function BoardHeader({ summary }: { summary: Summary }) {
+export function BoardHeader({ summary, compactTitle }: { summary: Summary; compactTitle?: string }) {
   const [period, setPeriod] = useState<Period>(loadPeriod)
   const [balance, setBalance] = useState<number>(loadBalance)
   const [editing, setEditing] = useState(false)
@@ -68,6 +68,26 @@ export function BoardHeader({ summary }: { summary: Summary }) {
   const money = period === "daily" ? fmt2 : fmt
   const leftover = summary.leftover * f
 
+  if (compactTitle) {
+    return (
+      <header className="sticky top-0 z-30 border-b-4 border-foreground bg-card px-ds-md pb-ds-sm pt-[64px]" data-oid="b5fbae0562" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+        <div className="flex items-end justify-between gap-ds-md" data-oid="ebabdccfd1">
+          <div className="min-w-0" data-oid="851ef6add4">
+            <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="d979b6a48f" data-oid-text-editable="false" data-oid-text-source="text|expression:0042047ac4e0">My money · {fmt(balance)}</p>
+            <h1 className="truncate font-heading text-heading font-extrabold uppercase" data-oid="7afcdc4500">{compactTitle}</h1>
+          </div>
+          <div data-negative={leftover < 0} className="shrink-0 border-2 border-foreground bg-background px-ds-sm py-ds-xs text-right data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="a45c4ef19b">
+            <p className="font-caption text-[10px] uppercase" data-oid="0922fd97e8" data-oid-text-editable="false" data-oid-text-source="text|expression:6e08cc8009dd">Left over {PERIOD_UNIT[period]}</p>
+            <p className="font-caption text-[17px] font-bold leading-tight" data-oid="91d12409ae" data-oid-text-editable="false" data-oid-text-source="expression:10fc05582f95|expression:ca0cc105110e">
+              {leftover < 0 ? "−" : ""}
+              {money(Math.abs(leftover))}
+            </p>
+          </div>
+        </div>
+      </header>
+    )
+  }
+
   return (
     <header className="space-y-ds-md px-ds-md pb-ds-lg pt-ds-3xl" data-oid="48eb0b28ad" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
       {/* Total money */}
@@ -76,9 +96,9 @@ export function BoardHeader({ summary }: { summary: Summary }) {
           <p className="font-caption text-caption uppercase" data-oid="98de086207">Total balance</p>
           <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="b4738789e2">My money</h1>
         </div>
-        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:539760e52a96|element:p">
+        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:cfff47cf83c0|element:p">
           {editing ? (
-            <div className="flex items-center gap-ds-sm" data-oid="91d12409ae">
+            <div className="flex items-center gap-ds-sm" data-oid="539910728e">
               <NumberInput value={balance} onChange={setBalance} prefix="$" ariaLabel="Total money" className="flex-1" />
               <button type="button" onClick={() => setEditing(false)} aria-label="Save total" className="ds-button ds-button-primary min-h-[56px] border-2 border-foreground" data-oid="261e00a219">
                 <Check className="size-5" strokeWidth={3} data-oid="ec16abb32e" />
