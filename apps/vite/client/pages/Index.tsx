@@ -28,7 +28,7 @@ export default function Index() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,transparent_40%,color-mix(in_srgb,var(--muted-foreground)_25%,transparent)_100%)]" data-oid="ff3770c16b" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background/70 sm:border-x-4 sm:border-foreground" data-oid="521d31b0ed">
-        <BoardHeader monthlySpend={summary.totalSpending} />
+        <BoardHeader summary={summary} />
         <div className="flex-1 px-ds-md pb-[160px]" data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:96fc6a06199a|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
           {tab === "board" ? <BoardOverview state={state} summary={summary} scenario={scenarioActive ? scenario : null} onNavigate={go} onReset={actions.resetAll} /> : null}
           {tab === "income" ? <IncomePanel state={state} summary={summary} actions={actions} /> : null}
