@@ -6,6 +6,21 @@ type Mode = "password" | "code"
 
 const redirectUrl = () => window.location.origin + import.meta.env.BASE_URL
 
+/** Turn Supabase auth errors into something actionable. */
+function explain(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes("invalid login credentials"))
+    return "Email or password doesn't match. If you haven't made an account with a password yet (e.g. you first tried the email code), tap Create account instead — or delete the user in Supabase → Authentication → Users and create it again."
+  if (m.includes("email not confirmed"))
+    return "This account is waiting for email confirmation. In Supabase → Authentication → Users, open your user and confirm it (or delete it), turn off “Confirm email” under Sign In / Providers → Email, then try again."
+  if (m.includes("already registered") || m.includes("already been registered"))
+    return "That email already has an account. Tap Sign in — if the password is rejected, the account was made without one: delete it in Supabase → Authentication → Users and create it again."
+  if (m.includes("password should be") || m.includes("weak")) return `Password too weak: ${message}`
+  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
+    return "Sign-ups are turned off. Enable them in Supabase → Authentication → Sign In / Providers."
+  return message
+}
+
 export function AuthScreen({ onSkip }: { onSkip: () => void }) {
   const [mode, setMode] = useState<Mode>("password")
   const [email, setEmail] = useState("")
@@ -22,7 +37,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
     setNotice(null)
     const { error } = await fn()
     setBusy(false)
-    if (error) setError(error.message)
+    if (error) setError(explain(error.message))
     return !error
   }
 
@@ -39,7 +54,10 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
       options: { emailRedirectTo: redirectUrl() },
     })
     setBusy(false)
-    if (error) return setError(error.message)
+    if (error) return setError(explain(error.message))
+    if (data.user && data.user.identities?.length === 0) {
+      return setError(explain("already registered"))
+    }
     if (!data.session) {
       setNotice(
         "Account created, but Supabase wants the email confirmed first. To skip that: Supabase → Authentication → Sign In / Providers → Email → turn off “Confirm email”, then tap Sign in.",
@@ -59,7 +77,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
   return (
     <main className="relative min-h-screen bg-background text-foreground" data-oid="96384403e2" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
       <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-ds-md py-ds-3xl" data-oid="a32f187891">
-        <section className="border-4 border-foreground bg-card" data-oid="a6361494a2" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|element:div|expression:bd3e71572039|expression:c49cb531f8ee">
+        <section className="border-4 border-foreground bg-card" data-oid="a6361494a2" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|element:div|expression:bb2e621d2446|expression:b70466ab836b">
           <div className="m-ds-xs border-2 border-foreground bg-primary px-ds-md py-ds-md text-center text-primary-foreground" data-oid="d5f6e3ddf4">
             <p className="font-caption text-caption uppercase" data-oid="689cbdb71f">Sync across devices</p>
             <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="fdc167dc0b">Sign in</h1>
@@ -74,7 +92,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
             </button>
           </div>
 
-          <div className="space-y-ds-md p-ds-md" data-oid="5d5e5c4d29" data-oid-text-editable="false" data-oid-text-source="element:label|expression:f0dcfe84b2ed">
+          <div className="space-y-ds-md p-ds-md" data-oid="5d5e5c4d29" data-oid-text-editable="false" data-oid-text-source="element:label|expression:f8ac0c4fd8dd">
             <label className="ds-field" data-oid="5781d1aefc">
               <span className="ds-field-label uppercase" data-oid="70f6d2b465">Email</span>
               <input
