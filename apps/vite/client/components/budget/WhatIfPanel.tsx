@@ -18,10 +18,10 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
 
   return (
     <div className="space-y-ds-lg" data-oid="8bd057d892" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
-      {/* Chance card */}
+      {/* Scenario intro */}
       <section className="relative overflow-hidden border-4 border-foreground bg-accent p-ds-lg text-accent-foreground shadow-[6px_6px_0_0_var(--foreground)]" data-oid="6c5eb148b7">
         <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-6 font-display text-[160px] font-black leading-none text-card/40" data-oid="ae8768fefd">?</span>
-        <p className="font-caption text-caption uppercase" data-oid="326ddb0f2b">Chance</p>
+        <p className="font-caption text-caption uppercase" data-oid="326ddb0f2b">Scenarios</p>
         <h2 className="relative font-display text-[40px] font-black uppercase leading-none tracking-[-0.02em]" data-oid="bc0755747f">What if?</h2>
         <p className="relative mt-ds-sm max-w-[80%] font-body text-body" data-oid="0dc524c29e">Drag the sliders to test a scenario. Nothing changes in your budget until you apply it.</p>
       </section>
@@ -50,7 +50,7 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
       {/* Sliders */}
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="bff971b7f8">
         <div className="border-b-4 border-foreground px-ds-md py-ds-sm" data-oid="461594b1d4">
-          <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="e0278ce7c7">Draw your card</h3>
+          <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="e0278ce7c7">Adjust the scenario</h3>
         </div>
 
         <div className="border-b-2 border-foreground/15 p-ds-md" data-oid="063fe066c8">
@@ -91,7 +91,7 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
       <div className="grid grid-cols-2 gap-ds-md" data-oid="1becff2194">
         <button type="button" disabled={!active} onClick={actions.resetWhatIf} className="ds-button min-h-[48px] border-2 border-foreground bg-card" data-oid="434f3ff993">
           <RotateCcw className="size-4" strokeWidth={2.5} data-oid="114b527ac4" />
-          Reset card
+          Reset scenario
         </button>
         <button type="button" disabled={!hasCuts} onClick={actions.applyWhatIf} className="ds-button ds-button-primary min-h-[48px] border-2 border-foreground" data-oid="d93128e4e8">
           <Check className="size-4" strokeWidth={3} data-oid="18a2a59941" />

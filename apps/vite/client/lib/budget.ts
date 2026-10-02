@@ -1,5 +1,5 @@
 /**
- * Budgetopoly — core budget model.
+ * Core budget model.
  *
  * Everything here is pure (no React, no storage) so it can be reused by a
  * server, tests, or a future data integration. Swap the defaults in
@@ -101,11 +101,11 @@ export interface CategoryMeta {
 }
 
 export const CATEGORIES: CategoryMeta[] = [
-  { id: "fixed", name: "Fixed bills", tagline: "Rent, utilities, insurance — the Park Lane set", band: "bg-secondary", bandText: "text-secondary-foreground" },
+  { id: "fixed", name: "Fixed bills", tagline: "Rent, utilities, insurance", band: "bg-secondary", bandText: "text-secondary-foreground" },
   { id: "food", name: "Food", tagline: "Groceries, lunches, takeaway", band: "bg-accent", bandText: "text-accent-foreground" },
   { id: "lifestyle", name: "Lifestyle", tagline: "Going out, transport, subscriptions, trips", band: "bg-[hsl(325.9_63.3%_52%)]", bandText: "text-primary-foreground" },
   { id: "health", name: "Health & wellness", tagline: "Gym, dental, prescriptions", band: "bg-success", bandText: "text-success-foreground" },
-  { id: "buffer", name: "Buffer", tagline: "Free Parking for the unexpected", band: "bg-warning", bandText: "text-warning-foreground" },
+  { id: "buffer", name: "Buffer", tagline: "A cushion for the unexpected", band: "bg-warning", bandText: "text-warning-foreground" },
 ]
 
 export const categoryById = (id: CategoryId) => CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[0]
@@ -375,7 +375,7 @@ export function downloadCsv(state: BudgetState) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url
-  a.download = `budgetopoly-${new Date().toISOString().slice(0, 7)}.csv`
+  a.download = `budget-${new Date().toISOString().slice(0, 7)}.csv`
   document.body.appendChild(a)
   a.click()
   a.remove()
