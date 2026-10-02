@@ -13,6 +13,7 @@
     "add:p5": "pnpm add p5 && pnpm add -D @types/p5"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "@tanstack/react-query": "^5.64.0",
     "@vibe/config": "workspace:*",
     "@vibe/ui": "workspace:*",

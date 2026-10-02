@@ -28,7 +28,6 @@ const PERIOD_UNIT: Record<Period, string> = {
 }
 
 const PERIOD_KEY = "budget:period"
-const BALANCE_KEY = "budget:balance"
 
 function loadPeriod(): Period {
   try {
@@ -40,19 +39,17 @@ function loadPeriod(): Period {
   return "monthly"
 }
 
-function loadBalance(): number {
-  try {
-    const v = parseFloat(localStorage.getItem(BALANCE_KEY) ?? "")
-    if (Number.isFinite(v)) return v
-  } catch {
-    /* ignore */
-  }
-  return 12500
+
+interface HeaderProps {
+  summary: Summary
+  balance: number
+  onBalanceChange: (v: number) => void
+  compactTitle?: string
 }
 
-export function BoardHeader({ summary, compactTitle }: { summary: Summary; compactTitle?: string }) {
+export function BoardHeader({ summary, balance, onBalanceChange, compactTitle }: HeaderProps) {
   const [period, setPeriod] = useState<Period>(loadPeriod)
-  const [balance, setBalance] = useState<number>(loadBalance)
+  const setBalance = onBalanceChange
   const [editing, setEditing] = useState(false)
 
   useEffect(() => {
@@ -63,13 +60,6 @@ export function BoardHeader({ summary, compactTitle }: { summary: Summary; compa
     }
   }, [period])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(BALANCE_KEY, String(balance))
-    } catch {
-      /* ignore */
-    }
-  }, [balance])
 
   const f = PERIOD_FACTOR[period]
   const money = period === "daily" ? fmt2 : fmt

@@ -99,7 +99,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onReset }:
 
       <div className="flex items-center justify-between gap-ds-sm border-t-2 border-dashed border-foreground pt-ds-md" data-oid="51056a4244">
         <p className="font-caption text-caption text-muted-foreground" data-oid="af29f0ebb7" data-oid-text-editable="false" data-oid-text-source="text|expression:36beac470406">
-          Saved on this device · {new Date(state.updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+          Last updated · {new Date(state.updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
         </p>
         <button
           type="button"

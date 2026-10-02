@@ -66,6 +66,8 @@ export interface BudgetState {
   items: BudgetItem[]
   goals: Goals
   whatIf: WhatIf
+  /** Total money across all accounts — shown as "My money". */
+  totalBalance: number
   updatedAt: string
 }
 
@@ -312,6 +314,7 @@ export function createDefaultState(): BudgetState {
       emergencyMonthly: 250,
     },
     whatIf: { cuts: emptyCuts(), incomeChange: 0 },
+    totalBalance: 12500,
     updatedAt: new Date().toISOString(),
   }
 }
@@ -332,6 +335,7 @@ export function normalizeState(raw: unknown): BudgetState {
       cuts: { ...emptyCuts(), ...(r.whatIf?.cuts ?? {}) },
     },
     items: Array.isArray(r.items) ? r.items : def.items,
+    totalBalance: typeof r.totalBalance === "number" && Number.isFinite(r.totalBalance) ? r.totalBalance : def.totalBalance,
   }
 }
 
