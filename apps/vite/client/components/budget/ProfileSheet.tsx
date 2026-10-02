@@ -63,7 +63,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     <UserRound className="size-5" strokeWidth={2.5} data-oid="4331a02366" />
                     <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="906360fec8">Account</h3>
                   </div>
-                  <div className="space-y-ds-sm p-ds-md" data-oid="05c73a073f" data-oid-text-editable="false" data-oid-text-source="element:p|expression:2b1944316b21|expression:6cc434b6362b|expression:3ba3bbde6539">
+                  <div className="space-y-ds-sm p-ds-md" data-oid="05c73a073f" data-oid-text-editable="false" data-oid-text-source="element:p|expression:f46f0b812016|expression:7ffe5d52ddcf|expression:52ada25be2c9">
                     <p className="break-all font-body text-body" data-oid="90eac4558c">{email ?? "Not signed in"}</p>
                     {!configured ? <p className="font-caption text-caption text-muted-foreground" data-oid="469795e514">Cloud sync isn't set up for this app.</p> : null}
                     {configured && email ? (
@@ -83,11 +83,11 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
 
                 {/* Sync */}
                 <section className="border-4 border-foreground bg-card" data-oid="cc282666e5">
-                  <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground" data-oid="627025c548" data-oid-text-editable="false" data-oid-text-source="expression:9a6adb08fc30|element:h3">
+                  <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground" data-oid="627025c548" data-oid-text-editable="false" data-oid-text-source="expression:cda5f46d5107|element:h3">
                     {synced ? <Cloud className="size-5" strokeWidth={2.5} data-oid="243a0c8798" /> : <CloudOff className="size-5" strokeWidth={2.5} data-oid="00c169ba21" />}
                     <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="40fe6baeb9">Sync</h3>
                   </div>
-                  <div className="space-y-ds-sm p-ds-md" data-oid="663fb11712" data-oid-text-editable="false" data-oid-text-source="element:p|element:p|expression:bdea53956a04">
+                  <div className="space-y-ds-sm p-ds-md" data-oid="663fb11712" data-oid-text-editable="false" data-oid-text-source="element:p|element:p|expression:bb3486dc3b73">
                     <p data-failed={failed} className="font-body text-body data-[failed=true]:text-primary" data-oid="919cec7110">{STATUS_TEXT[status]}</p>
                     <p className="font-caption text-caption text-muted-foreground" data-oid="b5943ce7ed" data-oid-text-editable="false" data-oid-text-source="text|expression:4d201f1f8e72">
                       Last updated {new Date(updatedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
