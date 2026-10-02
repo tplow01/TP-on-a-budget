@@ -61,7 +61,7 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
               {w.incomeChange}%
             </output>
           </div>
-          <input id="income-change" type="range" min={-30} max={30} step={1} value={w.incomeChange} onChange={(e) => actions.setIncomeChange(Number(e.target.value))} className="mt-ds-sm h-8 w-full accent-foreground" data-oid="b5f90dc424" />
+          <input id="income-change" type="range" min={-30} max={30} step={1} value={w.incomeChange} onChange={(e) => actions.setIncomeChange(Number(e.target.value))} className="mt-ds-sm h-12 w-full accent-foreground" data-oid="b5f90dc424" />
           <p className="font-caption text-caption text-muted-foreground" data-oid="cc129441c4" data-oid-text-editable="false" data-oid-text-source="expression:c73bb8f85842|text|expression:0b04ea8b74e8">{fmt(summary.takeHome)} → {fmt(scenario.takeHome)}</p>
         </div>
 
@@ -78,7 +78,7 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
                   </div>
                   <output className="font-caption text-[15px]" data-oid="f2e1b12d78" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:06e45e384318|text">{cut}%</output>
                 </div>
-                <input id={`cut-${cat.id}`} type="range" min={0} max={100} step={5} value={cut} onChange={(e) => actions.setCut(cat.id, Number(e.target.value))} className="mt-ds-sm h-8 w-full accent-foreground" data-oid="95c73741f2" data-oid-shared="true" data-oid-instance-targetable="true" />
+                <input id={`cut-${cat.id}`} type="range" min={0} max={100} step={5} value={cut} onChange={(e) => actions.setCut(cat.id, Number(e.target.value))} className="mt-ds-sm h-12 w-full accent-foreground" data-oid="95c73741f2" data-oid-shared="true" data-oid-instance-targetable="true" />
                 <p className="font-caption text-caption text-muted-foreground" data-oid="0cde5e6c01" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:da9784b25e08|text|expression:c1e2ecbcd8da|text|expression:f87667ba526d|text">
                   {fmt(base)} → {fmt(scenario.byCategory[cat.id])} · frees {fmt(base - scenario.byCategory[cat.id])}/mo
                 </p>
@@ -89,11 +89,11 @@ export function WhatIfPanel({ state, summary, scenario, actions }: Props) {
       </section>
 
       <div className="grid grid-cols-2 gap-ds-md" data-oid="1becff2194">
-        <button type="button" disabled={!active} onClick={actions.resetWhatIf} className="ds-button min-h-[48px] border-2 border-foreground bg-card" data-oid="434f3ff993">
+        <button type="button" disabled={!active} onClick={actions.resetWhatIf} className="ds-button min-h-[60px] border-2 border-foreground bg-card" data-oid="434f3ff993">
           <RotateCcw className="size-4" strokeWidth={2.5} data-oid="114b527ac4" />
           Reset scenario
         </button>
-        <button type="button" disabled={!hasCuts} onClick={actions.applyWhatIf} className="ds-button ds-button-primary min-h-[48px] border-2 border-foreground" data-oid="d93128e4e8">
+        <button type="button" disabled={!hasCuts} onClick={actions.applyWhatIf} className="ds-button ds-button-primary min-h-[60px] border-2 border-foreground" data-oid="d93128e4e8">
           <Check className="size-4" strokeWidth={3} data-oid="18a2a59941" />
           Apply cuts
         </button>

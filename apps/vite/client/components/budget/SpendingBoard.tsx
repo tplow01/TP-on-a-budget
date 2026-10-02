@@ -14,7 +14,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
   const pausedCount = state.items.filter((i) => !i.enabled).length
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:a62fdb05cce4">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:37ca384fbe20">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
@@ -59,7 +59,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                       placeholder="Name this cost"
                       aria-label="Item name"
                       onChange={(e) => actions.updateItem(item.id, { name: e.target.value })}
-                      className="min-h-[40px] w-full min-w-0 flex-1 border-b-2 border-transparent bg-transparent font-label text-[15px] font-bold uppercase tracking-[0.04em] outline-none placeholder:text-muted-foreground focus:border-foreground group-data-[enabled=false]/row:line-through group-data-[enabled=false]/row:opacity-60" data-oid="a17db43f36" data-oid-shared="true"
+                      className="min-h-[52px] w-full min-w-0 flex-1 border-b-2 border-transparent bg-transparent font-label text-[15px] font-bold uppercase tracking-[0.04em] outline-none placeholder:text-muted-foreground focus:border-foreground group-data-[enabled=false]/row:line-through group-data-[enabled=false]/row:opacity-60" data-oid="a17db43f36" data-oid-shared="true"
                     />
                     {!item.enabled ? <span className="shrink-0 rounded-sm border-2 border-foreground bg-warning px-1.5 font-caption text-[10px] uppercase" data-oid="539678f858" data-oid-shared="true">Paused</span> : null}
                     <button
@@ -77,7 +77,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                       aria-label="Billing frequency"
                       value={item.frequency}
                       onChange={(e) => actions.updateItem(item.id, { frequency: e.target.value as Frequency })}
-                      className="min-h-[44px] min-w-0 flex-1 rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[13px]" data-oid="6c0bc319be" data-oid-shared="true"
+                      className="min-h-[56px] min-w-0 flex-1 rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[16px]" data-oid="6c0bc319be" data-oid-shared="true"
                     >
                       {FREQUENCIES.map((f) => (
                         <option key={f} value={f} data-oid="76a40d7def" data-oid-shared="true">
@@ -99,7 +99,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
             <button
               type="button"
               onClick={() => actions.addItem(cat.id)}
-              className="flex min-h-[48px] w-full items-center justify-center gap-ds-xs border-t-2 border-dashed border-foreground font-label text-label font-bold uppercase hover:bg-background" data-oid="9406a8ca00" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false"
+              className="flex min-h-[60px] w-full items-center justify-center gap-ds-xs border-t-2 border-dashed border-foreground font-label text-label font-bold uppercase hover:bg-background" data-oid="9406a8ca00" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false"
             >
               <Plus className="size-4" strokeWidth={3} data-oid="dcde074677" data-oid-shared="true" data-oid-instance-targetable="true" />
               Add to {cat.name}
