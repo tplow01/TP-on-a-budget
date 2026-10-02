@@ -11,14 +11,15 @@ interface Props {
 }
 
 export function SpendingBoard({ state, summary, actions }: Props) {
-  const pausedCount = state.items.filter((i) => !i.enabled).length
+  const paused = state.items.filter((i) => !i.enabled)
+  const pausedCount = paused.length
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:37ca384fbe20">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:9dee00c0899a|expression:9f33cf3cda8d">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
-          <p className="font-caption text-caption text-muted-foreground" data-oid="b093783693" data-oid-text-editable="false" data-oid-text-source="expression:3e9a72a5540b|text">{pausedCount} paused · toggle off instead of deleting</p>
+          <p className="font-caption text-caption text-muted-foreground" data-oid="b093783693" data-oid-text-editable="false" data-oid-text-source="expression:3e9a72a5540b|text">{pausedCount} paused · switched-off costs move to the bottom</p>
         </div>
         <p className="font-display text-[28px] font-black leading-none" data-oid="8d753d8329">{fmt(summary.totalSpending)}</p>
       </section>
@@ -37,9 +38,9 @@ export function SpendingBoard({ state, summary, actions }: Props) {
       </nav>
 
       {CATEGORIES.map((cat) => {
-        const items = state.items.filter((i) => i.category === cat.id)
+        const items = state.items.filter((i) => i.category === cat.id && i.enabled)
         return (
-          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:ebedf6e4fd88|element:button">
+          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
               <div className="flex items-baseline justify-between gap-ds-sm" data-oid="4423a87d05" data-oid-shared="true" data-oid-instance-targetable="true">
                 <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="f9eee1ccd1" data-oid-shared="true" data-oid-instance-targetable="true">{cat.name}</h3>
@@ -66,7 +67,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                       type="button"
                       aria-label={`Delete ${item.name || "item"}`}
                       onClick={() => actions.removeItem(item.id)}
-                      className="flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-primary hover:text-primary-foreground" data-oid="ba5b991280" data-oid-shared="true"
+                      className="flex size-12 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-primary hover:text-primary-foreground" data-oid="ba5b991280" data-oid-shared="true"
                     >
                       <Trash2 className="size-4" strokeWidth={2.5} data-oid="c2cf7b304b" data-oid-shared="true" />
                     </button>
@@ -94,7 +95,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
               ))}
             </ul>
 
-            {items.length === 0 ? <p className="px-ds-md py-ds-md font-body text-body text-muted-foreground" data-oid="a66aa635e2" data-oid-shared="true">No costs here yet.</p> : null}
+            {items.length === 0 ? <p className="px-ds-md py-ds-md font-body text-body text-muted-foreground" data-oid="a66aa635e2" data-oid-shared="true">No active costs here.</p> : null}
 
             <button
               type="button"
@@ -107,6 +108,34 @@ export function SpendingBoard({ state, summary, actions }: Props) {
           </section>
         )
       })}
+
+      {pausedCount > 0 ? (
+        <section className="border-4 border-dashed border-foreground bg-card/70" data-oid="69b4d48bfc">
+          <div className="border-b-2 border-foreground px-ds-md py-ds-sm" data-oid="1b83391e45">
+            <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="3b7ae74046" data-oid-text-editable="false" data-oid-text-source="text|expression:3e9a72a5540b|text">Switched off ({pausedCount})</h3>
+            <p className="font-caption text-caption text-muted-foreground" data-oid="92113f8809">Not counted in your totals. Switch on to add back.</p>
+          </div>
+          <ul className="divide-y-2 divide-foreground/15" data-oid="37bc3f2965">
+            {paused.map((item, index) => (
+              <li key={item.id} data-index={index} className="flex min-h-[72px] items-center gap-ds-md px-ds-md py-ds-sm" data-oid="6a828d819b" data-oid-shared="true" data-oid-instance-targetable="true">
+                <Toggle checked={item.enabled} onChange={(v) => actions.updateItem(item.id, { enabled: v })} label={`Switch ${item.name || "item"} back on`} />
+                <div className="min-w-0 flex-1" data-oid="03940faf40" data-oid-shared="true" data-oid-instance-targetable="true">
+                  <p className="truncate font-label text-[15px] font-bold uppercase tracking-[0.04em] text-muted-foreground" data-oid="0c85452ad0" data-oid-shared="true" data-oid-instance-targetable="true">{item.name || "Unnamed cost"}</p>
+                  <p className="font-caption text-caption text-muted-foreground" data-oid="157f0b0241" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:c7e6c2a5ac76|text|expression:9db8a6f042ea|text">{CATEGORIES.find((c) => c.id === item.category)?.name} · {fmt(monthlyOf(item))}/mo</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Delete ${item.name || "item"}`}
+                  onClick={() => actions.removeItem(item.id)}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-primary hover:text-primary-foreground" data-oid="6930d9162d" data-oid-shared="true" data-oid-instance-targetable="true"
+                >
+                  <Trash2 className="size-5" strokeWidth={2.5} data-oid="44dec22421" data-oid-shared="true" data-oid-instance-targetable="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }
