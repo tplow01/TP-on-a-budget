@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
+import { BankSection } from "./BankSection"
 
 interface Props {
   open: boolean
@@ -13,6 +14,7 @@ interface Props {
   onSignOut: () => void
   onRetry: () => void
   onReset: () => void
+  onBankTotal: (total: number) => void
 }
 
 const STATUS_TEXT: Record<SyncStatus, string> = {
@@ -31,7 +33,7 @@ const SHEET = {
   transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const },
 }
 
-export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset }: Props) {
+export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal }: Props) {
   const failed = status === "error" || status === "offline"
   const synced = status !== "local" && !failed
 
@@ -56,7 +58,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                 </button>
               </div>
 
-              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a">
+              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a" data-oid-text-editable="false" data-oid-text-source="element:section|expression:b4a250afb4fe|element:section|element:section">
                 {/* Account */}
                 <section className="border-4 border-foreground bg-card" data-oid="080019ebe8">
                   <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-primary px-ds-md py-ds-sm text-primary-foreground" data-oid="a329fefc2e">
@@ -80,6 +82,8 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     ) : null}
                   </div>
                 </section>
+
+                {configured && email ? <BankSection onTotal={onBankTotal} /> : null}
 
                 {/* Sync */}
                 <section className="border-4 border-foreground bg-card" data-oid="cc282666e5">

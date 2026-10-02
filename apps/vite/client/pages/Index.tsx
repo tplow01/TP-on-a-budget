@@ -98,6 +98,7 @@ export default function Index() {
           onSignOut={() => void signOut()}
           onRetry={actions.retrySync}
           onReset={actions.resetAll}
+          onBankTotal={actions.setTotalBalance}
         />
       </div>
     </main>
