@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
+import { Link } from "react-router-dom"
 import type { SyncStatus } from "../../hooks/useBudget"
 import { BankSection } from "./BankSection"
 
@@ -112,11 +113,11 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="3c1c85f252">Data</h3>
                   </div>
                   <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228">
-                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Replace your budget with the sample one. If you're signed in, this applies on all your devices.</p>
+                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Clear everything back to a blank budget. If you're signed in, this applies on all your devices.</p>
                     <button
                       type="button"
                       onClick={() => {
-                        if (window.confirm("Reset everything to the sample budget?")) {
+                        if (window.confirm("Clear everything and start from a blank budget?")) {
                           onReset()
                           onClose()
                         }
@@ -128,6 +129,12 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     </button>
                   </div>
                 </section>
+
+                <div className="flex justify-center gap-ds-sm pt-ds-xs font-caption text-caption text-muted-foreground">
+                  <Link to="/privacy" className="underline" onClick={onClose}>Privacy</Link>
+                  <span>·</span>
+                  <Link to="/terms" className="underline" onClick={onClose}>Terms</Link>
+                </div>
               </div>
             </div>
           </motion.div>
