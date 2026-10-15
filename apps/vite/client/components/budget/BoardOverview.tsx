@@ -56,7 +56,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
   const dueTotal = dueSoon.reduce((s, d) => s + d.item.amount, 0)
 
   return (
-    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="expression:78eabde89dfb|element:section|element:section|expression:2fb839d39453|element:section|element:div">
+    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="expression:78eabde89dfb|element:section|element:section|expression:9af74c5e9d14|element:section|element:div">
       {scenario ? (
         <button
           type="button"
@@ -98,7 +98,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
       </section>
 
       {/* Due soon */}
-      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:b41b1d31e74b">
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:1eb1edaa28a2">
         <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-accent px-ds-md py-ds-sm text-accent-foreground" data-oid="acb59d6ba7">
           <div className="flex items-center gap-ds-sm" data-oid="72fad6a4cf">
             <CalendarClock className="size-5" strokeWidth={2.5} data-oid="5d73ce58c7" />

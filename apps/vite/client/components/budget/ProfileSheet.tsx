@@ -133,6 +133,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                 <nav aria-label="Legal" className="flex justify-center gap-ds-lg pt-ds-xs" data-oid="e0ecfaca56">
                   <Link to="/privacy" className="inline-flex min-h-[44px] items-center font-label text-[12px] font-bold uppercase tracking-[0.06em] underline" data-oid="7b0048e7b7">Privacy Policy</Link>
                   <Link to="/terms" className="inline-flex min-h-[44px] items-center font-label text-[12px] font-bold uppercase tracking-[0.06em] underline" data-oid="156fe8b25f">Terms</Link>
+                  <Link to="/security" className="inline-flex min-h-[44px] items-center font-label text-[12px] font-bold uppercase tracking-[0.06em] underline" data-oid="315132283d">Security</Link>
                 </nav>
               </div>
             </div>
