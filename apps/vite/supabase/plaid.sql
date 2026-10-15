@@ -54,3 +54,11 @@ alter table public.transactions enable row level security;
 drop policy if exists "transactions_select_own" on public.transactions;
 create policy "transactions_select_own" on public.transactions
   for select to authenticated using ((select auth.uid()) = user_id);
+
+-- Live updates: let the app hear about new balances/transactions instantly (Supabase Realtime).
+do $$ begin
+  alter publication supabase_realtime add table public.bank_accounts;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.transactions;
+exception when duplicate_object then null; end $$;

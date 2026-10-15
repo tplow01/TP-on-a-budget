@@ -90,7 +90,7 @@ export function IncomePanel({ state, summary, actions }: Props) {
           <CalendarDays className="size-5" strokeWidth={2.5} data-oid="9060910176" />
           <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="65ee6c99f8">Payday</h3>
         </div>
-        <div className="space-y-ds-md p-ds-md" data-oid="de162639fd" data-oid-text-editable="false" data-oid-text-source="element:label|expression:4b07f42ef345|element:p">
+        <div className="space-y-ds-md p-ds-md" data-oid="de162639fd" data-oid-text-editable="false" data-oid-text-source="element:label|expression:893cf9fdd499|element:p">
           <label className="ds-field" data-oid="ce9ff2277c">
             <span className="ds-field-label uppercase" data-oid="937427b52c">How often you're paid</span>
             <select

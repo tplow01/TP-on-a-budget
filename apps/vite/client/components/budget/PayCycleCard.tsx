@@ -3,21 +3,27 @@ import { CalendarDays } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { categoryById, fmt, fmt2, payCycles, type BudgetState, type Summary } from "../../lib/budget"
 import type { TabId } from "./TabBar"
+import { findPayment, type Txn } from "../../lib/transactions"
 
 interface Props {
   state: BudgetState
   summary: Summary
   onNavigate: (t: TabId) => void
+  /** Recent bank transactions, used to tick off bills that are already paid. */
+  txs: Txn[]
 }
 
 const day = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
 
 /** Bills grouped by payday: what's due before each paycheck, and whether it's covered. */
-export function PayCycleCard({ state, summary, onNavigate }: Props) {
-  const { cycles, undated } = useMemo(() => payCycles(state, summary.takeHome, 3), [state, summary.takeHome])
+export function PayCycleCard({ state, summary, txs, onNavigate }: Props) {
+  const { cycles, undated } = useMemo(
+    () => payCycles(state, summary.takeHome, 3, new Date(), (item, date) => Boolean(findPayment(item, date, txs))),
+    [state, summary.takeHome, txs],
+  )
 
   return (
-    <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="63cfcb25e1" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:abc582ed1a6a|expression:37d9342adc39">
+    <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="63cfcb25e1" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:2966042820f8|expression:c98e58ef4873">
       <div className="flex items-center gap-ds-sm border-b-4 border-foreground bg-primary px-ds-md py-ds-sm text-primary-foreground" data-oid="99981dbca8">
         <CalendarDays className="size-5" strokeWidth={2.5} data-oid="f7cb9880df" />
         <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="5537157470">Pay cycles</h2>
@@ -33,7 +39,7 @@ export function PayCycleCard({ state, summary, onNavigate }: Props) {
       ) : (
         <ol data-oid="f9d2fad0fa">
           {cycles.map((c, index) => (
-            <li key={c.start.toISOString()} data-index={index} className="border-t-4 border-foreground first:border-t-0" data-oid="271fbc6b23" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:ba0783a65183|element:div">
+            <li key={c.start.toISOString()} data-index={index} className="border-t-4 border-foreground first:border-t-0" data-oid="271fbc6b23" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:90623995e864|element:div">
               <div className="flex items-center gap-ds-sm bg-background px-ds-md py-ds-sm" data-oid="98b019ed09" data-oid-shared="true" data-oid-instance-targetable="true">
                 <span
                   data-now={c.isNow}
@@ -52,11 +58,12 @@ export function PayCycleCard({ state, summary, onNavigate }: Props) {
               {c.bills.length === 0 ? (
                 <p className="px-ds-md py-ds-sm font-caption text-caption text-muted-foreground" data-oid="5f1bdeb87c" data-oid-shared="true">No dated bills in this cycle.</p>
               ) : (
-                <ul className="divide-y-2 divide-foreground/10" data-oid="2e84e730be" data-oid-shared="true" data-oid-text-editable="false" data-oid-text-source="expression:9242c5929127|expression:d52088011b19">
+                <ul className="divide-y-2 divide-foreground/10" data-oid="2e84e730be" data-oid-shared="true" data-oid-text-editable="false" data-oid-text-source="expression:1b6e1d13cd31|expression:0c0a622388a7">
                   {c.bills.slice(0, 5).map((b, i) => (
-                    <li key={`${b.item.id}-${b.date.getTime()}`} data-index={i} className="flex min-h-[44px] items-center gap-ds-sm px-ds-md" data-oid="ed38305907" data-oid-shared="true">
+                    <li key={`${b.item.id}-${b.date.getTime()}`} data-index={i} data-paid={b.paid} className="group/bill flex min-h-[44px] items-center gap-ds-sm px-ds-md data-[paid=true]:bg-background" data-oid="ed38305907" data-oid-shared="true" data-oid-text-editable="false" data-oid-text-source="element:span|element:p|expression:eb2ecffe1193|element:p|element:p">
                       <span aria-hidden="true" className={cn("size-3 shrink-0 border-2 border-foreground", categoryById(b.item.category).band)} data-oid="46c8231e0d" data-oid-shared="true" data-oid-classname-dynamic="true" />
-                      <p className="min-w-0 flex-1 truncate font-body text-[14px]" data-oid="f92897dbdc" data-oid-shared="true">{b.item.name || "Unnamed cost"}</p>
+                      <p className="min-w-0 flex-1 truncate font-body text-[14px] group-data-[paid=true]/bill:text-muted-foreground group-data-[paid=true]/bill:line-through" data-oid="f92897dbdc" data-oid-shared="true">{b.item.name || "Unnamed cost"}</p>
+                      {b.paid ? <span className="shrink-0 rounded-sm border-2 border-foreground bg-success px-1 font-caption text-[10px] uppercase text-success-foreground" data-oid="be6747759f" data-oid-shared="true">Paid</span> : null}
                       <p className="shrink-0 font-caption text-caption text-muted-foreground" data-oid="61f1a4b9bb" data-oid-shared="true">{b.date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
                       <p className="w-20 shrink-0 text-right font-caption text-[14px] font-bold" data-oid="4c7dd26a24" data-oid-shared="true">{fmt2(b.item.amount)}</p>
                     </li>

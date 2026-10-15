@@ -13,6 +13,8 @@ const PLAID_BASE = PLAID_ENV === "production" ? "https://production.plaid.com" :
 const PLAID_CLIENT_ID = Deno.env.get("PLAID_CLIENT_ID") ?? ""
 const PLAID_SECRET = Deno.env.get("PLAID_SECRET") ?? ""
 const PLAID_REDIRECT_URI = Deno.env.get("PLAID_REDIRECT_URI") // optional, for OAuth banks
+// Plaid calls this when new transactions post. Defaults to this function's own URL.
+const WEBHOOK_URL = Deno.env.get("PLAID_WEBHOOK_URL") ?? `${Deno.env.get("SUPABASE_URL")}/functions/v1/plaid`
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
 
@@ -112,6 +114,61 @@ async function listAccounts(userId: string) {
   return data ?? []
 }
 
+/* ---------------- Webhooks ---------------- */
+
+const keyCache = new Map<string, CryptoKey>()
+const b64url = (s: string) => {
+  const b = s.replace(/-/g, "+").replace(/_/g, "/")
+  return Uint8Array.from(atob(b.padEnd(Math.ceil(b.length / 4) * 4, "=")), (c) => c.charCodeAt(0))
+}
+const decodeJson = (s: string) => JSON.parse(new TextDecoder().decode(b64url(s)))
+
+/** Verify the Plaid-Verification JWT: ES256 signature, issued < 5 min ago, body hash matches. */
+async function verifyWebhook(raw: string, token: string | null): Promise<boolean> {
+  try {
+    if (!token) return false
+    const [h, p, s] = token.split(".")
+    const header = decodeJson(h)
+    if (header.alg !== "ES256" || !header.kid) return false
+    let key = keyCache.get(header.kid)
+    if (!key) {
+      const { key: jwk } = await plaid<{ key: any }>("/webhook_verification_key/get", { key_id: header.kid })
+      if (jwk.expired_at) return false
+      key = await crypto.subtle.importKey("jwk", { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"])
+      keyCache.set(header.kid, key)
+    }
+    const ok = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, b64url(s), new TextEncoder().encode(`${h}.${p}`))
+    if (!ok) return false
+    const payload = decodeJson(p)
+    if (Date.now() / 1000 - payload.iat > 300) return false
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw))
+    const hex = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("")
+    return hex === payload.request_body_sha256
+  } catch {
+    return false
+  }
+}
+
+/** New transactions posted (or balances changed) at the bank → sync this item. */
+async function handleWebhook(raw: string, body: any, signature: string | null) {
+  if (!(await verifyWebhook(raw, signature))) return json({ error: "Invalid webhook signature" }, 401)
+  const { data: it } = await admin
+    .from("plaid_items")
+    .select("item_id, user_id, access_token, institution, cursor")
+    .eq("item_id", body.item_id)
+    .maybeSingle()
+  if (!it) return json({ ok: true })
+  const shouldSync =
+    body.webhook_type === "TRANSACTIONS" || (body.webhook_type === "ITEM" && body.webhook_code === "NEW_ACCOUNTS_AVAILABLE")
+  if (shouldSync) {
+    await syncItem(it.user_id, it.item_id, it.access_token, it.institution)
+    await syncTransactions(it.user_id, it.item_id, it.access_token, it.cursor)
+  } else if (body.webhook_type === "ITEM") {
+    console.warn("Plaid item webhook", body.item_id, body.webhook_code, body.error?.error_code ?? "")
+  }
+  return json({ ok: true })
+}
+
 Deno.serve(async (req) => {
   // Allow whatever headers the browser asks for (newer supabase-js sends extra ones).
   const requested = req.headers.get("Access-Control-Request-Headers")
@@ -123,13 +180,23 @@ Deno.serve(async (req) => {
   try {
     if (!PLAID_CLIENT_ID || !PLAID_SECRET) return json({ error: "Plaid keys are not set. Run: supabase secrets set PLAID_CLIENT_ID=... PLAID_SECRET=..." }, 500)
 
+    const raw = await req.text()
+    let body: any = {}
+    try {
+      body = raw ? JSON.parse(raw) : {}
+    } catch {
+      body = {}
+    }
+
+    // Plaid webhook (no user login — verified by signature instead).
+    if (body.webhook_type) return await handleWebhook(raw, body, req.headers.get("Plaid-Verification"))
+
     // Who is calling?
     const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "")
     const { data: auth, error: authError } = await admin.auth.getUser(jwt)
     if (authError || !auth.user) return json({ error: "Please sign in first." }, 401)
     const userId = auth.user.id
 
-    const body = await req.json().catch(() => ({}))
 
     switch (body.action) {
       case "create_link_token": {
@@ -140,6 +207,7 @@ Deno.serve(async (req) => {
           country_codes: ["US"],
           language: "en",
           transactions: { days_requested: 180 },
+          webhook: WEBHOOK_URL,
           ...(PLAID_REDIRECT_URI ? { redirect_uri: PLAID_REDIRECT_URI } : {}),
         })
         return json({ link_token: data.link_token })
@@ -163,6 +231,8 @@ Deno.serve(async (req) => {
         const { data: items, error } = await admin.from("plaid_items").select("item_id, access_token, institution, cursor").eq("user_id", userId)
         if (error) throw error
         for (const it of items ?? []) {
+          // Make sure banks linked before webhooks existed also push updates.
+          await plaid("/item/webhook/update", { access_token: it.access_token, webhook: WEBHOOK_URL }).catch(() => undefined)
           await syncItem(userId, it.item_id, it.access_token, it.institution)
           await syncTransactions(userId, it.item_id, it.access_token, it.cursor).catch((e) => console.error("transactions", e))
         }

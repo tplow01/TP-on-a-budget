@@ -4,6 +4,12 @@ import { Landmark, Plus, RefreshCw, Unlink } from "lucide-react"
 import { fmt2 } from "../../lib/budget"
 import { BANK_UPDATED_EVENT } from "../../lib/transactions"
 import { success } from "../../lib/haptics"
+
+const reloadOnBankUpdate = (set: (a: BankAccount[]) => void) => {
+  const load = () => void readSavedAccounts().then(set)
+  window.addEventListener(BANK_UPDATED_EVENT, load)
+  return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
+}
 import {
   cashTotal,
   clearLinkToken,
@@ -55,6 +61,9 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
       setError("The bank sign-in expired. Tap Connect bank to try again.")
     }
   }, [oauthReturn])
+
+  // Live updates pushed from the bank (via useBankLive) refresh this list too.
+  useEffect(() => reloadOnBankUpdate(setAccounts), [])
 
   const { open, ready } = usePlaidLink({
     token: linkToken,

@@ -7,6 +7,7 @@ import { AuthScreen } from "../components/budget/AuthScreen"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
 import { isScenarioActive, summarize } from "../lib/budget"
 import { isOAuthReturn } from "../lib/plaid"
+import { useBankLive } from "../hooks/useBankLive"
 import { BoardHeader } from "../components/budget/BoardHeader"
 import { BoardOverview } from "../components/budget/BoardOverview"
 import { GoalsPanel } from "../components/budget/GoalsPanel"
@@ -20,6 +21,7 @@ export default function Index() {
   const userId = auth.session?.user.id ?? null
   const store = useMemo(() => (supabase && userId ? createSupabaseStore(supabase, userId) : null), [userId])
   const { state, actions, status } = useBudget(store)
+  useBankLive(userId, actions.setTotalBalance)
   const [localOnly, setLocalOnly] = useState(() => {
     try {
       return window.localStorage.getItem("budget:localOnly") === "1"

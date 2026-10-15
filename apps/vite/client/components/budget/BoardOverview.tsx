@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, CircleHelp, Landmark } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { readSavedAccounts, type BankAccount } from "../../lib/plaid"
-import { BANK_UPDATED_EVENT } from "../../lib/transactions"
+import { BANK_UPDATED_EVENT, findPayment } from "../../lib/transactions"
+import { useTransactions } from "../../hooks/useTransactions"
 import { PayCycleCard } from "./PayCycleCard"
 import { SpendInsights } from "./SpendInsights"
 import {
@@ -49,18 +50,20 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
     return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
   }, [])
 
+  const txs = useTransactions(45)
   const dueSoon = useMemo(() => {
     const today = new Date()
     return state.items
       .filter((i) => i.enabled)
       .map((i) => {
         const next = upcomingDueDate(i, today)
-        return next ? { item: i, next, days: daysUntil(next, today) } : null
+        return next ? { item: i, next, days: daysUntil(next, today), paid: findPayment(i, next, txs ?? []) } : null
       })
       .filter((x): x is NonNullable<typeof x> => x !== null && x.days <= 14)
-      .sort((a, b) => a.days - b.days)
-  }, [state.items])
-  const dueTotal = dueSoon.reduce((s, d) => s + d.item.amount, 0)
+      .sort((a, b) => Number(Boolean(a.paid)) - Number(Boolean(b.paid)) || a.days - b.days)
+  }, [state.items, txs])
+  const dueTotal = dueSoon.reduce((s, d) => s + (d.paid ? 0 : d.item.amount), 0)
+  const lastSynced = accounts.reduce((m, a) => (a.updated_at > m ? a.updated_at : m), "")
 
   return (
     <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false">
@@ -105,7 +108,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
       </section>
 
       {/* Due soon */}
-      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:1eb1edaa28a2">
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:e4c8c423a4dd">
         <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-accent px-ds-md py-ds-sm text-accent-foreground" data-oid="acb59d6ba7">
           <div className="flex items-center gap-ds-sm" data-oid="72fad6a4cf">
             <CalendarClock className="size-5" strokeWidth={2.5} data-oid="5d73ce58c7" />
@@ -120,15 +123,15 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
         ) : (
           <ul className="divide-y-2 divide-foreground/15" data-oid="9928c1d0fe">
             {dueSoon.map((d, index) => (
-              <li key={d.item.id} data-index={index} data-urgent={d.days <= 2} className="flex min-h-[56px] items-center gap-ds-sm px-ds-md py-ds-sm" data-oid="77182f3d5d" data-oid-shared="true" data-oid-instance-targetable="true">
+              <li key={d.item.id} data-index={index} data-urgent={d.days <= 2} data-paid={Boolean(d.paid)} className="group/due flex min-h-[56px] items-center gap-ds-sm px-ds-md py-ds-sm data-[paid=true]:bg-background" data-oid="77182f3d5d" data-oid-shared="true" data-oid-instance-targetable="true">
                 <span aria-hidden="true" className={cn("size-4 shrink-0 border-2 border-foreground", categoryById(d.item.category).band)} data-oid="cd76ab44e8" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true" />
                 <div className="min-w-0 flex-1" data-oid="934f11aef7" data-oid-shared="true" data-oid-instance-targetable="true">
-                  <p className="truncate font-label text-[14px] font-bold uppercase tracking-[0.04em]" data-oid="842081f9c0" data-oid-shared="true" data-oid-instance-targetable="true">{d.item.name || "Unnamed cost"}</p>
+                  <p className="truncate font-label text-[14px] font-bold uppercase tracking-[0.04em] group-data-[paid=true]/due:text-muted-foreground group-data-[paid=true]/due:line-through" data-oid-shared="true" data-oid-instance-targetable="true" data-oid="286e203420">{d.item.name || "Unnamed cost"}</p>
                   <p className="font-caption text-caption text-muted-foreground" data-oid="6fa01dcd92" data-oid-shared="true" data-oid-instance-targetable="true">
                     {d.next.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
                   </p>
                 </div>
-                <span data-urgent={d.days <= 2} className="shrink-0 rounded-sm border-2 border-foreground bg-background px-1.5 font-caption text-[11px] uppercase data-[urgent=true]:bg-primary data-[urgent=true]:text-primary-foreground" data-oid="7d5b6223a6" data-oid-shared="true" data-oid-instance-targetable="true">{dueLabel(d.days)}</span>
+                <span data-urgent={d.days <= 2 && !d.paid} data-paid={Boolean(d.paid)} className="shrink-0 rounded-sm border-2 border-foreground bg-background px-1.5 font-caption text-[11px] uppercase data-[urgent=true]:bg-primary data-[urgent=true]:text-primary-foreground data-[paid=true]:bg-success data-[paid=true]:text-success-foreground" data-oid="7d5b6223a6" data-oid-shared="true" data-oid-instance-targetable="true">{d.paid ? "Paid ✓" : dueLabel(d.days)}</span>
                 <span className="w-20 shrink-0 text-right font-caption text-[15px] font-bold" data-oid="156a59b48a" data-oid-shared="true" data-oid-instance-targetable="true">{fmt2(d.item.amount)}</span>
               </li>
             ))}
@@ -136,17 +139,26 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
         )}
       </section>
 
-      <PayCycleCard state={state} summary={summary} onNavigate={onNavigate} />
+      <PayCycleCard state={state} summary={summary} txs={txs ?? []} onNavigate={onNavigate} />
 
       <SpendInsights summary={summary} hasAccounts={accounts.length > 0} onOpenProfile={onOpenProfile} />
 
       {/* Per-account balances */}
       {accounts.length > 0 ? (
-        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="7dcd6f6cd6">
+        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="7dcd6f6cd6" data-oid-text-editable="false" data-oid-text-source="element:div|expression:7aded290beaf|element:ul">
           <div className="flex items-center gap-ds-sm border-b-4 border-foreground bg-success px-ds-md py-ds-sm text-success-foreground" data-oid="a34aa59772">
             <Landmark className="size-5" strokeWidth={2.5} data-oid="0668e55fa3" />
             <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="bf79e27b38">Accounts</h2>
+            <span className="ml-auto inline-flex items-center gap-1.5 rounded-sm border-2 border-foreground bg-card px-1.5 font-caption text-[11px] uppercase text-foreground" data-oid="134390bd10">
+              <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-success" data-oid="369566a3ef" />
+              Live
+            </span>
           </div>
+          {lastSynced ? (
+            <p className="border-b-2 border-foreground px-ds-md py-ds-xs font-caption text-caption text-muted-foreground" data-oid="33f0debd34" data-oid-text-editable="false" data-oid-text-source="text|expression:d0e0103843bf">
+              Updates when your bank posts a payment · last synced {new Date(lastSynced).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+            </p>
+          ) : null}
           <ul className="divide-y-2 divide-foreground/15" data-oid="413968c242">
             {accounts.map((a, index) => (
               <li key={a.account_id} data-index={index} className="flex min-h-[56px] items-center justify-between gap-ds-sm px-ds-md py-ds-sm" data-oid="5f62009759" data-oid-shared="true" data-oid-instance-targetable="true">

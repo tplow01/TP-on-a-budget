@@ -378,13 +378,14 @@ export interface PayCycle {
   /** The "now" window is paid from your balance; the rest from one paycheck. */
   isNow: boolean
   funds: number
-  bills: Array<{ item: BudgetItem; date: Date }>
+  bills: Array<{ item: BudgetItem; date: Date; paid: boolean }>
+  /** Unpaid bills only — paid ones have already left My money. */
   billsTotal: number
   remaining: number
 }
 
 /** Groups dated bills into the windows between paydays: now → payday 1 → payday 2 → … */
-export function payCycles(state: BudgetState, takeHomeMonthly: number, count = 3, today = new Date()) {
+export function payCycles(state: BudgetState, takeHomeMonthly: number, count = 3, today = new Date(), isPaid?: (item: BudgetItem, date: Date) => boolean) {
   const paycheck = (takeHomeMonthly * 12) / PAYS_PER_YEAR[state.income.payFrequency]
   const enabled = state.items.filter((i) => i.enabled)
   const dated = enabled.filter((i) => parseDay(i.dueDate))
@@ -397,9 +398,9 @@ export function payCycles(state: BudgetState, takeHomeMonthly: number, count = 3
     const end = bounds[k + 1]
     if (start.getTime() === end.getTime()) continue
     const bills = dated
-      .flatMap((item) => occurrencesBetween(item, start, end).map((date) => ({ item, date })))
+      .flatMap((item) => occurrencesBetween(item, start, end).map((date) => ({ item, date, paid: isPaid?.(item, date) ?? false })))
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-    const billsTotal = bills.reduce((s, b) => s + Math.max(0, b.item.amount), 0)
+    const billsTotal = bills.reduce((s, b) => s + (b.paid ? 0 : Math.max(0, b.item.amount)), 0)
     const funds = k === 0 ? state.totalBalance : paycheck
     cycles.push({ start, end, isNow: k === 0, funds, bills, billsTotal, remaining: funds - billsTotal })
   }

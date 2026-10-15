@@ -58,3 +58,43 @@ export async function readTransactions(since: string): Promise<Txn[]> {
 
 /** Fired after bank data changes so Overview widgets reload. */
 export const BANK_UPDATED_EVENT = "budget:bank-updated"
+
+/* ------------------------------------------------------------------ */
+/* Matching bank payments to bills                                     */
+/* ------------------------------------------------------------------ */
+
+const STOP_WORDS = new Set(["the", "and", "for", "bill", "bills", "payment", "monthly", "yearly", "weekly", "my", "inc", "llc", "com"])
+const words = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
+
+const LOOKBACK_DAYS: Record<string, number> = { weekly: 3, fortnightly: 6 }
+
+/**
+ * The bank payment that covers this bill's `due` date, if any.
+ * Matches when the merchant/description shares a word with the bill name
+ * and the amount is within 25% (or $2), dated from a few days before the due date up to today.
+ * Tip: name bills after the company you pay (e.g. "Geico", "Comcast") for the best matches.
+ */
+export function findPayment(item: { name: string; amount: number; frequency: string }, due: Date, txs: Txn[]): Txn | null {
+  const keys = words(item.name)
+  if (!keys.length || !(item.amount > 0)) return null
+  const day = 86400000
+  const from = due.getTime() - (LOOKBACK_DAYS[item.frequency] ?? 10) * day
+  const to = Math.min(due.getTime() + 5 * day, Date.now())
+  const tolerance = Math.max(2, item.amount * 0.25)
+  let best: Txn | null = null
+  for (const t of txs) {
+    const amt = Number(t.amount)
+    if (!(amt > 0) || Math.abs(amt - item.amount) > tolerance) continue
+    const when = new Date(`${t.date}T12:00:00`).getTime()
+    if (when < from || when > to) continue
+    const hay = words(`${t.merchant_name ?? ""} ${t.name ?? ""}`)
+    if (!hay.some((w) => keys.some((k) => w.startsWith(k) || k.startsWith(w)))) continue
+    if (!best || Math.abs(amt - item.amount) < Math.abs(Number(best.amount) - item.amount)) best = t
+  }
+  return best
+}

@@ -74,7 +74,7 @@ export function SpendInsights({ summary, hasAccounts, onOpenProfile }: Props) {
   const overTotal = overList.reduce((s, c) => s + data.current[c.id] - summary.byCategory[c.id], 0)
 
   return (
-    <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="5f31cef6ff" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:5bc97f8376da">
+    <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="5f31cef6ff" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:div|expression:a3e03d66107d">
       <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground" data-oid="2cdad0a43b">
         <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="5009e846f3">Actual vs plan</h2>
         <p className="font-caption text-caption uppercase" data-oid="be0ce411c9">{data.monthName}</p>
@@ -134,7 +134,7 @@ export function SpendInsights({ summary, hasAccounts, onOpenProfile }: Props) {
                     <div data-status={status} className="h-full bg-success transition-[width] duration-500 data-[status=ahead]:bg-warning data-[status=over]:bg-primary" style={{ width: `${fill * 100}%` }} data-oid="0bcb17b763" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-style-dynamic="width" />
                   </div>
                   <div className="flex items-center justify-between gap-ds-sm" data-oid="881d3e6100" data-oid-shared="true" data-oid-instance-targetable="true">
-                    <p className="inline-flex items-center gap-1 font-caption text-caption text-muted-foreground" data-oid="9f3e673866" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:7aaea8fd1175|expression:1a58ff012ac3">
+                    <p className="inline-flex items-center gap-1 font-caption text-caption text-muted-foreground" data-oid="9f3e673866" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="expression:aeda8ba2204c|expression:1a58ff012ac3">
                       {Math.abs(delta) < 1 ? <Minus className="size-3.5" strokeWidth={3} data-oid="789bd409b4" data-oid-shared="true" /> : delta > 0 ? <TrendingUp className="size-3.5" strokeWidth={3} data-oid="b175835bba" data-oid-shared="true" /> : <TrendingDown className="size-3.5" strokeWidth={3} data-oid="78bfee6a01" data-oid-shared="true" />}
                       {Math.abs(delta) < 1 ? "Same as last month" : `${fmt(Math.abs(delta))} ${delta > 0 ? "more" : "less"} than last month`}
                     </p>

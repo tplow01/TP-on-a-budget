@@ -114,7 +114,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
           <p className="font-caption text-caption uppercase" data-oid="98de086207">Total balance</p>
           <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="b4738789e2">My money</h1>
         </div>
-        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:25d5758436e3|element:p">
+        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:d39934c8ac89|element:p">
           {editing ? (
             <div className="flex items-center gap-ds-sm" data-oid="539910728e">
               <NumberInput value={balance} onChange={setBalance} prefix="$" ariaLabel="Total money" className="flex-1" />
