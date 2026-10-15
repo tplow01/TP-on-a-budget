@@ -1,4 +1,5 @@
 import { PolicyPage } from "../components/PolicyPage"
+import { CONTACT_EMAIL } from "../lib/contact"
 
 export default function Terms() {
   return (
@@ -18,7 +19,7 @@ export default function Terms() {
       <p data-oid="aed882244e">The app is provided "as is". We may change or stop features at any time and aren't liable for losses resulting from its use, to the extent the law allows.</p>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="f2aee41062">Contact</h2>
-      <p data-oid="04a122820f">Email <a href="mailto:support@example.com" className="font-bold underline" data-oid="8a432ffe34">support@example.com</a>.</p>
+      <p data-oid="04a122820f">Email <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold underline" data-oid="8a432ffe34">{CONTACT_EMAIL}</a>.</p>
     </PolicyPage>
   )
 }

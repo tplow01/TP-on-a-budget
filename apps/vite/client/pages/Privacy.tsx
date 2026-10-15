@@ -1,4 +1,5 @@
 import { PolicyPage } from "../components/PolicyPage"
+import { CONTACT_EMAIL } from "../lib/contact"
 
 export default function Privacy() {
   return (
@@ -29,7 +30,7 @@ export default function Privacy() {
       <p data-oid="2cb89a54a9">You can disconnect a bank at any time from Profile → Bank accounts, which deletes its stored token and balances. To delete your account and all your data, email the address below.</p>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="a8bae6dd8d">Contact</h2>
-      <p data-oid="284cc898b2">Questions? Email <a href="mailto:privacy@example.com" className="font-bold underline" data-oid="9e5223d677">privacy@example.com</a>.</p>
+      <p data-oid="284cc898b2">Questions? Email <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold underline" data-oid="9e5223d677">{CONTACT_EMAIL}</a>.</p>
     </PolicyPage>
   )
 }

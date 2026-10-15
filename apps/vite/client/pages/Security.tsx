@@ -1,4 +1,5 @@
 import { PolicyPage } from "../components/PolicyPage"
+import { CONTACT_EMAIL } from "../lib/contact"
 
 export default function Security() {
   return (
@@ -60,7 +61,7 @@ export default function Security() {
       <p data-oid="8334249f24">We rely on Supabase (database, sign-in, Edge Functions), Plaid (bank connections) and our hosting provider. Each is checked for SOC 2 Type II or an equivalent standard before we start using it, and again every year.</p>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="17db85430b">Contact</h2>
-      <p data-oid="5648078180">Report a security issue to <a href="mailto:security@example.com" className="font-bold underline" data-oid="3d5b13c613">security@example.com</a>.</p>
+      <p data-oid="5648078180">Report a security issue to <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold underline" data-oid="3d5b13c613">{CONTACT_EMAIL}</a>.</p>
     </PolicyPage>
   )
 }
