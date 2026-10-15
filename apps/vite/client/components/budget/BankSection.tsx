@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react"
 import { usePlaidLink } from "react-plaid-link"
 import { Landmark, Plus, RefreshCw, Unlink } from "lucide-react"
 import { fmt2 } from "../../lib/budget"
+import { Link } from "react-router-dom"
+import { supabase } from "../../lib/supabase"
 import { BANK_UPDATED_EVENT } from "../../lib/transactions"
 import { success } from "../../lib/haptics"
 
@@ -25,7 +27,9 @@ import {
   type BankAccount,
 } from "../../lib/plaid"
 
-export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
+export function BankSection({ onTotal, mfaReady }: { onTotal: (total: number) => void; mfaReady: boolean }) {
+  const [consentOpen, setConsentOpen] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   // Coming back from an OAuth bank: resume Link with the token we stored before leaving.
   const [oauthReturn] = useState(isOAuthReturn)
@@ -91,12 +95,31 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
     if (linkToken && ready) open()
   }, [linkToken, ready, open])
 
+  const openLink = async () => {
+    const { link_token } = await createLinkToken()
+    saveLinkToken(link_token)
+    setLinkToken(link_token)
+  }
+
+  /** Consent is asked once and stored on the account with a timestamp. */
   const connect = () =>
     run("Opening", async () => {
-      const { link_token } = await createLinkToken()
-      saveLinkToken(link_token)
-      setLinkToken(link_token)
+      const { data } = await supabase!.auth.getUser()
+      if (!data.user?.user_metadata?.plaid_consent_at) {
+        setConsentOpen(true)
+        return
+      }
+      await openLink()
     })
+
+  const agreeAndConnect = () =>
+    run("Opening", async () => {
+      const { error } = await supabase!.auth.updateUser({ data: { plaid_consent_at: new Date().toISOString(), plaid_consent_version: "2026-10-15" } })
+      if (error) throw error
+      setConsentOpen(false)
+      await openLink()
+    })
+
 
   const banks = Array.from(new Map(accounts.map((a) => [a.item_id, a.institution ?? "Bank"])).entries())
 
@@ -107,7 +130,7 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
         <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="92f3f2fa3b">Bank accounts</h3>
       </div>
 
-      <div className="space-y-ds-md p-ds-md" data-oid="a782c93308" data-oid-text-editable="false" data-oid-text-source="expression:22524e85f18e|expression:3bad8c11a5a3|element:button|expression:65cc46b2018f|expression:9cb002c7b845">
+      <div className="space-y-ds-md p-ds-md" data-oid="a782c93308" data-oid-text-editable="false" data-oid-text-source="expression:22524e85f18e|expression:3bad8c11a5a3|expression:9345748c6d61|expression:a3358cfbca28|element:button|expression:65cc46b2018f|expression:9cb002c7b845">
         {accounts.length === 0 ? (
           <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="53c177c8a0">
             Link a bank to fill in My money automatically from your checking and savings balances.
@@ -156,7 +179,37 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
           </p>
         ) : null}
 
-        <button type="button" disabled={busy !== null} onClick={() => void connect()} className="ds-button ds-button-primary min-h-[56px] w-full border-2 border-foreground" data-oid="62e7e6f7a6" data-oid-text-editable="false">
+        {!mfaReady ? (
+          <p className="border-2 border-foreground bg-warning px-ds-sm py-ds-xs font-body text-[14px] leading-snug text-warning-foreground" data-oid="373417fbb1">
+            Turn on two-step verification above before connecting a bank. It keeps your bank data safe if your email is ever compromised.
+          </p>
+        ) : null}
+
+        {consentOpen ? (
+          <div className="space-y-ds-sm border-2 border-foreground bg-background p-ds-sm" data-oid="e72f1d938c">
+            <h4 className="font-label text-label font-extrabold uppercase" data-oid="ef4c562038">Before you connect</h4>
+            <ul className="list-disc space-y-ds-xs pl-ds-lg font-body text-[14px] leading-snug" data-oid="11e74cb19e">
+              <li data-oid="0dc150b128">We use Plaid to connect to your bank. Your bank login goes to Plaid and your bank, never to this app.</li>
+              <li data-oid="711ed2d625">We'll store account names, the last 4 digits, balances and transactions to show your budget.</li>
+              <li data-oid="8502ed2d88">We don't sell or share it. Disconnect any time to delete it.</li>
+            </ul>
+            <label className="flex min-h-[44px] items-start gap-ds-sm font-body text-[14px] leading-snug" data-oid="c20839ccd1">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 size-6 shrink-0 accent-[var(--primary)]" data-oid="c86528639a" />
+              <span data-oid="1ca4c7b2fd">
+                I agree to the{" "}
+                <Link to="/privacy" className="font-bold underline" data-oid="7e70fd3bf3">Privacy Policy</Link>{" "}
+                and{" "}
+                <a href="https://plaid.com/legal/#end-user-privacy-policy" target="_blank" rel="noreferrer" className="font-bold underline" data-oid="bbc3fffe2d">Plaid End User Privacy Policy</a>, and allow this app to collect and store this data.
+              </span>
+            </label>
+            <div className="grid grid-cols-2 gap-ds-sm" data-oid="69e3421ae8">
+              <button type="button" onClick={() => setConsentOpen(false)} className="ds-button min-h-[52px] border-2 border-foreground bg-card" data-oid="3b2466db42">Cancel</button>
+              <button type="button" disabled={!agreed || busy !== null} onClick={() => void agreeAndConnect()} className="ds-button ds-button-primary min-h-[52px] border-2 border-foreground" data-oid="513f2c522d">Agree</button>
+            </div>
+          </div>
+        ) : null}
+
+        <button type="button" disabled={busy !== null || !mfaReady || consentOpen} onClick={() => void connect()} className="ds-button ds-button-primary min-h-[56px] w-full border-2 border-foreground" data-oid="62e7e6f7a6" data-oid-text-editable="false">
           <Plus className="size-5" strokeWidth={3} data-oid="35aa63c22c" />
           {busy === "Opening" || busy === "Linking" ? `${busy}…` : accounts.length ? "Connect another bank" : "Connect bank"}
         </button>

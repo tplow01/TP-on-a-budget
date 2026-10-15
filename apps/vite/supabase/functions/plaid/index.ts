@@ -196,10 +196,23 @@ Deno.serve(async (req) => {
     const { data: auth, error: authError } = await admin.auth.getUser(jwt)
     if (authError || !auth.user) return json({ error: "Please sign in first." }, 401)
     const userId = auth.user.id
+    // Assurance level from the (already verified) JWT: aal2 = passed two-step verification this session.
+    const aal: string = (() => {
+      try {
+        return decodeJson(jwt.split(".")[1]).aal ?? "aal1"
+      } catch {
+        return "aal1"
+      }
+    })()
+    const hasMfa = (auth.user.factors ?? []).some((f: any) => f.status === "verified")
+    const requireMfa = () => (aal === "aal2" ? null : json({ error: "Turn on two-step verification and sign in with your code before connecting a bank." }, 403))
 
 
     switch (body.action) {
       case "create_link_token": {
+        const blocked = requireMfa()
+        if (blocked) return blocked
+        if (!auth.user.user_metadata?.plaid_consent_at) return json({ error: "Please agree to the data consent before connecting a bank." }, 403)
         const data = await plaid<{ link_token: string }>("/link/token/create", {
           user: { client_user_id: userId },
           client_name: "My Budget",
@@ -214,6 +227,8 @@ Deno.serve(async (req) => {
       }
 
       case "exchange": {
+        const blockedExchange = requireMfa()
+        if (blockedExchange) return blockedExchange
         if (!body.public_token) return json({ error: "Missing public_token" }, 400)
         const { access_token, item_id } = await plaid<{ access_token: string; item_id: string }>("/item/public_token/exchange", {
           public_token: body.public_token,
@@ -246,6 +261,16 @@ Deno.serve(async (req) => {
           await admin.from("plaid_items").delete().eq("item_id", body.item_id).eq("user_id", userId) // cascades to bank_accounts
         }
         return json({ accounts: await listAccounts(userId) })
+      }
+
+      case "delete_account": {
+        if (hasMfa && aal !== "aal2") return json({ error: "Sign in with your two-step code first." }, 403)
+        const { data: items } = await admin.from("plaid_items").select("item_id, access_token").eq("user_id", userId)
+        for (const it of items ?? []) await plaid("/item/remove", { access_token: it.access_token }).catch(() => undefined)
+        // Deleting the user cascades to budgets, plaid_items, bank_accounts and transactions.
+        const { error } = await admin.auth.admin.deleteUser(userId)
+        if (error) throw error
+        return json({ ok: true })
       }
 
       default:

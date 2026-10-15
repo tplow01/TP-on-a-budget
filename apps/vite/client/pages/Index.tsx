@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth"
 import { supabase } from "../lib/supabase"
 import { clearLocalBudget, createSupabaseStore } from "../lib/storage"
 import { AuthScreen } from "../components/budget/AuthScreen"
+import { MfaChallenge } from "../components/budget/MfaChallenge"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
 import { isScenarioActive, summarize } from "../lib/budget"
 import { isOAuthReturn } from "../lib/plaid"
@@ -65,6 +66,17 @@ export default function Index() {
     return <AuthScreen onSkip={() => setLocal(true)} />
   }
 
+  if (auth.needsMfa) {
+    return (
+      <MfaChallenge
+        onVerified={() => void auth.refreshAal()}
+        onSignOut={() => {
+          void auth.signOut().then(() => window.location.reload())
+        }}
+      />
+    )
+  }
+
   const signOut = async () => {
     await auth.signOut()
     clearLocalBudget() // don't leave this account's budget on a shared device
@@ -103,6 +115,10 @@ export default function Index() {
           onRetry={actions.retrySync}
           onReset={actions.resetAll}
           onBankTotal={actions.setTotalBalance}
+          mfaEnabled={auth.mfaEnabled}
+          mfaVerified={auth.mfaVerified}
+          onMfaChanged={() => void auth.refreshAal()}
+          onDeleted={() => void signOut()}
         />
       </div>
     </main>

@@ -62,3 +62,10 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.transactions;
 exception when duplicate_object then null; end $$;
+
+-- Retention: delete transactions older than 24 months, every night at 03:00 UTC.
+-- Needs the pg_cron extension (Database → Extensions → pg_cron → Enable) before running this part.
+create extension if not exists pg_cron;
+select cron.unschedule('purge-old-transactions') where exists (select 1 from cron.job where jobname = 'purge-old-transactions');
+select cron.schedule('purge-old-transactions', '0 3 * * *',
+  $$delete from public.transactions where date < (current_date - interval '24 months')$$);

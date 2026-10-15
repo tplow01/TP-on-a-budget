@@ -1,4 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion"
+import { useState } from "react"
+import { Trash2 } from "lucide-react"
+import { deleteAccount } from "../../lib/plaid"
+import { MfaSection } from "./MfaSection"
 import { Link } from "react-router-dom"
 import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
@@ -16,6 +20,11 @@ interface Props {
   onRetry: () => void
   onReset: () => void
   onBankTotal: (total: number) => void
+  mfaEnabled: boolean
+  mfaVerified: boolean
+  onMfaChanged: () => void
+  /** Called after the account has been deleted on the server. */
+  onDeleted: () => void
 }
 
 const STATUS_TEXT: Record<SyncStatus, string> = {
@@ -34,7 +43,22 @@ const SHEET = {
   transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const },
 }
 
-export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal }: Props) {
+export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted }: Props) {
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const removeAccount = async () => {
+    if (!window.confirm("Delete your account? This disconnects every bank and permanently erases your budget, balances and transactions.")) return
+    if (window.prompt('Type DELETE to confirm') !== "DELETE") return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteAccount()
+      onDeleted()
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : String(e))
+      setDeleting(false)
+    }
+  }
   const failed = status === "error" || status === "offline"
   const synced = status !== "local" && !failed
 
@@ -59,7 +83,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                 </button>
               </div>
 
-              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a" data-oid-text-editable="false" data-oid-text-source="element:section|expression:b4a250afb4fe|element:section|element:section|element:nav">
+              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a" data-oid-text-editable="false" data-oid-text-source="element:section|expression:069acedc9e5c|expression:0cbc9057c172|element:section|element:section|element:nav">
                 {/* Account */}
                 <section className="border-4 border-foreground bg-card" data-oid="080019ebe8">
                   <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-primary px-ds-md py-ds-sm text-primary-foreground" data-oid="a329fefc2e">
@@ -84,7 +108,9 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                   </div>
                 </section>
 
-                {configured && email ? <BankSection onTotal={onBankTotal} /> : null}
+                {configured && email ? <MfaSection enabled={mfaEnabled} onChanged={onMfaChanged} /> : null}
+
+                {configured && email ? <BankSection onTotal={onBankTotal} mfaReady={mfaVerified} /> : null}
 
                 {/* Sync */}
                 <section className="border-4 border-foreground bg-card" data-oid="cc282666e5">
@@ -112,7 +138,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     <RotateCcw className="size-5" strokeWidth={2.5} data-oid="eb5c344406" />
                     <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="3c1c85f252">Data</h3>
                   </div>
-                  <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228">
+                  <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228" data-oid-text-editable="false" data-oid-text-source="element:p|element:button|expression:2a6695e1b7c7">
                     <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Clear everything and start from a blank budget. If you're signed in, this applies on all your devices.</p>
                     <button
                       type="button"
@@ -127,6 +153,16 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                       <RotateCcw className="size-5" strokeWidth={2.5} data-oid="bd346ccc04" />
                       Reset budget
                     </button>
+                    {configured && email ? (
+                      <>
+                        <p className="pt-ds-sm font-body text-[14px] leading-snug text-muted-foreground" data-oid="6fe6f9d6c9">Permanently delete your account, disconnect all banks and erase every bit of your data.</p>
+                        <button type="button" disabled={deleting} onClick={() => void removeAccount()} className="ds-button ds-button-primary min-h-[56px] w-full border-2 border-foreground" data-oid="6111e0f39c" data-oid-text-editable="false">
+                          <Trash2 className="size-5" strokeWidth={2.5} data-oid="7749eee17c" />
+                          {deleting ? "Deleting…" : "Delete account & data"}
+                        </button>
+                        {deleteError ? <p className="border-2 border-foreground bg-primary px-ds-sm py-ds-xs font-body text-[14px] text-primary-foreground" data-oid="599dd0b8fe">{deleteError}</p> : null}
+                      </>
+                    ) : null}
                   </div>
                 </section>
 

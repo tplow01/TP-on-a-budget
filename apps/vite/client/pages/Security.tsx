@@ -25,8 +25,10 @@ export default function Security() {
       <ul className="list-disc space-y-ds-xs pl-ds-lg" data-oid="5119e75cb2">
         <li data-oid="e518f0e1e2">Access to production systems (Supabase, Plaid Dashboard, GitHub, hosting) is limited to named people who need it. Each person gets only the access their job requires.</li>
         <li data-oid="3ab89cbd36">Multi-factor authentication is required on every admin account.</li>
+        <li data-oid="b96bed5b0b">Customers must turn on two-step verification (authenticator app) before Plaid Link is shown. The server rejects bank-linking requests from sessions that haven't completed it.</li>
+        <li data-oid="eff2f2aebd">Customers give explicit, timestamped consent before any bank data is collected.</li>
         <li data-oid="dc041ac535">Access is reviewed every quarter, and removed within 24 hours when someone no longer needs it.</li>
-        <li data-oid="b96bed5b0b">Database row-level security stops each signed-in user from reading anyone else's budget or account data.</li>
+        <li data-oid="d733920f4b">Database row-level security stops each signed-in user from reading anyone else's budget or account data.</li>
       </ul>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="3aa0201ec2">4. Data protection</h2>
@@ -35,7 +37,8 @@ export default function Security() {
         <li data-oid="2c5c15ef21">Plaid access tokens are only stored on the server, in a table the browser cannot read. Only the server-side Edge Function can use them.</li>
         <li data-oid="4e85af1a3d">API secrets are kept in Supabase's secret store. They are never committed to source code or included in the app's code.</li>
         <li data-oid="86d76c6222">We only collect the data the app needs: account names, types, last four digits and balances. Bank login details are never received or stored.</li>
-        <li data-oid="5bf677f517">Disconnecting a bank removes its Plaid item and deletes the stored token and balances. Account deletion requests are completed within 30 days.</li>
+        <li data-oid="5bf677f517">Disconnecting a bank removes its Plaid item and deletes the stored token and balances. Customers can delete their account and all data instantly in the app, and transactions older than 24 months are deleted automatically.</li>
+        <li data-oid="fefbf3b257">The web app is served over HTTPS only, with HSTS and security headers that block framing and content sniffing.</li>
       </ul>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="c8e0ad4b51">5. Secure development</h2>

@@ -27,10 +27,16 @@ export default function Privacy() {
       <p data-oid="ecb4277968">Data is encrypted in transit, and database rules stop any account from reading another account's data.</p>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="b1ffc93eea">Your choices</h2>
-      <p data-oid="2cb89a54a9">You can disconnect a bank at any time from Profile → Bank accounts, which deletes its stored token and balances. To delete your account and all your data, email the address below.</p>
+      <p data-oid="2cb89a54a9">You can disconnect a bank at any time from Profile → Bank accounts, which deletes its stored token, balances and transactions. You can delete your account and all your data instantly from Profile → Data → Delete account & data.</p>
+
+      <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="284cc898b2">Consent</h2>
+      <p data-oid="b4be3e8aba">Before connecting a bank we ask for your explicit consent to collect, process and store your bank data, and record when you gave it. Disconnecting a bank or deleting your account withdraws that consent.</p>
+
+      <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="6e234fe086">Retention</h2>
+      <p data-oid="a823161ddb">We keep your data only while your account is active. Bank data is deleted immediately when you disconnect that bank, and everything is deleted immediately when you delete your account. Transactions older than 24 months are deleted automatically.</p>
 
       <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="a8bae6dd8d">Contact</h2>
-      <p data-oid="284cc898b2">Questions? Email <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold underline" data-oid="9e5223d677">{CONTACT_EMAIL}</a>.</p>
+      <p data-oid="4a40632d10">Questions? Email <a href={`mailto:${CONTACT_EMAIL}`} className="font-bold underline" data-oid="9e5223d677">{CONTACT_EMAIL}</a>.</p>
     </PolicyPage>
   )
 }

@@ -108,7 +108,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
       </section>
 
       {/* Due soon */}
-      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:e4c8c423a4dd">
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:dc56f37b33e4">
         <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-accent px-ds-md py-ds-sm text-accent-foreground" data-oid="acb59d6ba7">
           <div className="flex items-center gap-ds-sm" data-oid="72fad6a4cf">
             <CalendarClock className="size-5" strokeWidth={2.5} data-oid="5d73ce58c7" />
@@ -145,7 +145,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
 
       {/* Per-account balances */}
       {accounts.length > 0 ? (
-        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="7dcd6f6cd6" data-oid-text-editable="false" data-oid-text-source="element:div|expression:7aded290beaf|element:ul">
+        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="7dcd6f6cd6" data-oid-text-editable="false" data-oid-text-source="element:div|expression:a804af84309c|element:ul">
           <div className="flex items-center gap-ds-sm border-b-4 border-foreground bg-success px-ds-md py-ds-sm text-success-foreground" data-oid="a34aa59772">
             <Landmark className="size-5" strokeWidth={2.5} data-oid="0668e55fa3" />
             <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="bf79e27b38">Accounts</h2>

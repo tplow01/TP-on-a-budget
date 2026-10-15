@@ -46,6 +46,8 @@ export const exchangePublicToken = (public_token: string, institution: string | 
   call<{ accounts: BankAccount[] }>("exchange", { public_token, institution })
 export const refreshAccounts = () => call<{ accounts: BankAccount[] }>("refresh")
 export const disconnectItem = (item_id: string) => call<{ accounts: BankAccount[] }>("disconnect", { item_id })
+/** Removes every bank link at Plaid, then deletes the account and all its data. */
+export const deleteAccount = () => call<{ ok: true }>("delete_account")
 
 /** Saved account list (readable thanks to RLS), no Plaid call. */
 export async function readSavedAccounts(): Promise<BankAccount[]> {
