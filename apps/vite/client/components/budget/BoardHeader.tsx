@@ -83,7 +83,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
 
   if (compactTitle) {
     return (
-      <header className="sticky top-0 z-30 border-b-4 border-foreground bg-card px-ds-md pb-ds-sm pt-[64px]" data-oid="b5fbae0562" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+      <header className="sticky top-0 z-30 border-b-4 border-foreground bg-card px-ds-md pb-ds-sm pt-[calc(env(safe-area-inset-top)+16px)]" data-oid="b5fbae0562" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
         <div className="flex items-end justify-between gap-ds-md" data-oid="ebabdccfd1" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|expression:ecf0a98ab97c">
           <div className="min-w-0" data-oid="851ef6add4">
             <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="d979b6a48f">My money · <CountUp value={balance} format={fmt} /></p>
@@ -103,7 +103,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
   }
 
   return (
-    <header className="space-y-ds-md px-ds-md pb-ds-lg pt-[60px]" data-oid="48eb0b28ad" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+    <header className="space-y-ds-md px-ds-md pb-ds-lg pt-[calc(env(safe-area-inset-top)+16px)]" data-oid="48eb0b28ad" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
       <div className="flex items-center justify-between gap-ds-sm" data-oid="48a31bce69" data-oid-text-editable="false" data-oid-text-source="element:p|expression:ecf0a98ab97c">
         <p className="font-label text-label font-bold uppercase text-muted-foreground" data-oid="d94ae785c5">Budget</p>
         {profileButton}
