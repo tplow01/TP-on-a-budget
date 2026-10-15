@@ -23,22 +23,6 @@ export default function Index() {
   const store = useMemo(() => (supabase && userId ? createSupabaseStore(supabase, userId) : null), [userId])
   const { state, actions, status } = useBudget(store)
   useBankLive(userId, actions.setTotalBalance)
-  const [localOnly, setLocalOnly] = useState(() => {
-    try {
-      return window.localStorage.getItem("budget:localOnly") === "1"
-    } catch {
-      return false
-    }
-  })
-  const setLocal = (v: boolean) => {
-    setLocalOnly(v)
-    try {
-      if (v) window.localStorage.setItem("budget:localOnly", "1")
-      else window.localStorage.removeItem("budget:localOnly")
-    } catch {
-      /* ignore */
-    }
-  }
   const [tab, setTab] = useState<TabId>("board")
   // Back from an OAuth bank login? Re-open the Profile sheet so Plaid Link can finish.
   const [profileOpen, setProfileOpen] = useState(isOAuthReturn)
@@ -62,8 +46,8 @@ export default function Index() {
     )
   }
 
-  if (auth.configured && !auth.session && !localOnly) {
-    return <AuthScreen onSkip={() => setLocal(true)} />
+  if (auth.configured && !auth.session) {
+    return <AuthScreen />
   }
 
   if (auth.needsMfa) {
@@ -107,10 +91,7 @@ export default function Index() {
           email={email}
           status={status}
           updatedAt={state.updatedAt}
-          onSignIn={() => {
-            setProfileOpen(false)
-            setLocal(false)
-          }}
+          onSignIn={() => setProfileOpen(false)}
           onSignOut={() => void signOut()}
           onRetry={actions.retrySync}
           onReset={actions.resetAll}

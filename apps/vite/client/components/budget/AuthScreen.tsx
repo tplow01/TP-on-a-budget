@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ArrowRight, Copy, KeyRound, Mail, UserPlus } from "lucide-react"
+import { ArrowRight, Copy, KeyRound, Mail } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { success } from "../../lib/haptics"
 
@@ -15,17 +15,14 @@ function explain(message: string): string {
     return "Email or password doesn't match. No password yet? Use the email link instead. You can always sign in that way."
   if (m.includes("email not confirmed"))
     return "This account is waiting for email confirmation. Use the email link tab, or turn off “Confirm email” in Supabase → Authentication → Sign In / Providers → Email."
-  if (m.includes("already registered") || m.includes("already been registered"))
-    return "That email already has an account. Tap Sign in, or use the email link if you don't remember the password."
-  if (m.includes("password should be") || m.includes("weak")) return `Password too weak: ${message}`
   if (m.includes("rate limit") || m.includes("security purposes")) return "Too many emails just now. Wait a minute and try again."
   if (m.includes("expired") || m.includes("invalid") && m.includes("token")) return "That code has expired or was already used. Send a new link."
-  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
-    return "Sign-ups are turned off. Enable them in Supabase → Authentication → Sign In / Providers."
+  if (m.includes("user not found") || m.includes("signups not allowed"))
+    return "No account exists for that email."
   return message
 }
 
-export function AuthScreen({ onSkip }: { onSkip: () => void }) {
+export function AuthScreen() {
   const [mode, setMode] = useState<Mode>("link")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -54,7 +51,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
 
   const sendLink = async () => {
     const to = email.trim()
-    const ok = await run(() => supabase!.auth.signInWithOtp({ email: to, options: { shouldCreateUser: true, emailRedirectTo: redirectUrl() } }))
+    const ok = await run(() => supabase!.auth.signInWithOtp({ email: to, options: { shouldCreateUser: false, emailRedirectTo: redirectUrl() } }))
     if (ok) {
       setSentTo(to)
       setCooldown(RESEND_SECONDS)
@@ -65,17 +62,6 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
   const verify = () => run(() => supabase!.auth.verifyOtp({ email: (sentTo ?? email).trim(), token: code.trim(), type: "email" }))
 
   const signIn = () => run(() => supabase!.auth.signInWithPassword({ email: email.trim(), password }))
-
-  const signUp = async () => {
-    setBusy(true)
-    setError(null)
-    setNotice(null)
-    const { data, error } = await supabase!.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl() } })
-    setBusy(false)
-    if (error) return setError(explain(error.message))
-    if (data.user && data.user.identities?.length === 0) return setError(explain("already registered"))
-    if (!data.session) setNotice("Account created. Check your email to confirm it, then sign in.")
-  }
 
   return (
     <main className="relative min-h-screen bg-background text-foreground" data-oid="868fc29f7b" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
@@ -145,7 +131,7 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
                       <Mail className="size-5" strokeWidth={2.5} data-oid="faa7c23397" />
                       {busy ? "Sending…" : "Email me a sign-in link"}
                     </button>
-                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="b43bf3f93b">No password to remember or reset. New here? The same link creates your account.</p>
+                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="b43bf3f93b">No password to remember or reset.</p>
                   </>
                 )}
               </>
@@ -165,10 +151,6 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
                 <button type="button" disabled={busy || !email || !password} onClick={() => void signIn()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="88c4ae97d6" data-oid-text-editable="false">
                   <KeyRound className="size-5" strokeWidth={2.5} data-oid="4bad4c724d" />
                   {busy ? "Working…" : "Sign in"}
-                </button>
-                <button type="button" disabled={busy || !email || password.length < 6} onClick={() => void signUp()} className="ds-button ds-button-secondary min-h-[56px] w-full border-2 border-foreground" data-oid="75ed1c2499">
-                  <UserPlus className="size-5" strokeWidth={2.5} data-oid="7f4af4a09e" />
-                  Create account
                 </button>
                 <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="7e9d5e18cf">Save the password to iCloud Keychain when asked. Next time Safari fills it in with Face ID.</p>
               </>
@@ -191,10 +173,6 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
             </div>
           </details>
         </section>
-
-        <button type="button" onClick={onSkip} className="mt-ds-lg min-h-[52px] font-label text-label font-bold uppercase text-muted-foreground underline underline-offset-4" data-oid="cde52abccc">
-          Use on this device only
-        </button>
       </div>
     </main>
   )
