@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { cn } from "@vibe/ui"
+import { tap } from "../../lib/haptics"
 
 interface NumberInputProps {
   value: number
@@ -50,7 +51,10 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        tap()
+        onChange(!checked)
+      }}
       className="group/switch relative inline-flex h-10 w-[68px] shrink-0 items-center rounded-full border-2 border-foreground bg-muted transition-[background-color,scale] duration-200 active:scale-95 aria-checked:bg-success" data-oid="67854cdd57" data-oid-component-root="true"
     >
       <span aria-hidden="true" className="absolute left-1 size-7 rounded-full border-2 border-foreground bg-card transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-aria-checked/switch:translate-x-7" data-oid="bde47f313b" />

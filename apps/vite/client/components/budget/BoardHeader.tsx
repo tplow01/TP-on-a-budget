@@ -9,6 +9,8 @@ const NUMBER_SWAP = {
 }
 import { fmt, fmt2, type Summary } from "../../lib/budget"
 import { NumberInput } from "./fields"
+import { CountUp } from "./CountUp"
+import { tap } from "../../lib/haptics"
 
 type Period = "daily" | "weekly" | "monthly" | "yearly"
 
@@ -84,14 +86,14 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
       <header className="sticky top-0 z-30 border-b-4 border-foreground bg-card px-ds-md pb-ds-sm pt-[64px]" data-oid="b5fbae0562" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
         <div className="flex items-end justify-between gap-ds-md" data-oid="ebabdccfd1" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|expression:ecf0a98ab97c">
           <div className="min-w-0" data-oid="851ef6add4">
-            <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="d979b6a48f" data-oid-text-editable="false" data-oid-text-source="text|expression:0042047ac4e0">My money · {fmt(balance)}</p>
+            <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="d979b6a48f">My money · <CountUp value={balance} format={fmt} /></p>
             <h1 className="truncate font-heading text-heading font-extrabold uppercase" data-oid="7afcdc4500">{compactTitle}</h1>
           </div>
           <div data-negative={leftover < 0} className="shrink-0 border-2 border-foreground bg-background px-ds-sm py-ds-xs text-right data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="a45c4ef19b">
             <p className="font-caption text-[10px] uppercase" data-oid="0922fd97e8" data-oid-text-editable="false" data-oid-text-source="text|expression:6e08cc8009dd">Left over {PERIOD_UNIT[period]}</p>
-            <p className="font-caption text-[17px] font-bold leading-tight" data-oid="91d12409ae" data-oid-text-editable="false" data-oid-text-source="expression:10fc05582f95|expression:ca0cc105110e">
+            <p className="font-caption text-[17px] font-bold leading-tight" data-oid="91d12409ae" data-oid-text-editable="false">
               {leftover < 0 ? "−" : ""}
-              {money(Math.abs(leftover))}
+              <CountUp value={Math.abs(leftover)} format={money} />
             </p>
           </div>
           {profileButton}
@@ -112,18 +114,21 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
           <p className="font-caption text-caption uppercase" data-oid="98de086207">Total balance</p>
           <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="b4738789e2">My money</h1>
         </div>
-        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:406ab16b4f7c|element:p">
+        <div className="px-ds-md pb-ds-md pt-ds-sm text-center" data-oid="cce8735145" data-oid-text-editable="false" data-oid-text-source="expression:25d5758436e3|element:p">
           {editing ? (
             <div className="flex items-center gap-ds-sm" data-oid="539910728e">
               <NumberInput value={balance} onChange={setBalance} prefix="$" ariaLabel="Total money" className="flex-1" />
-              <button type="button" onClick={() => setEditing(false)} aria-label="Save total" className="ds-button ds-button-primary min-h-[56px] border-2 border-foreground" data-oid="261e00a219">
+              <button type="button" onClick={() => {
+                setEditing(false)
+                tap()
+              }} aria-label="Save total" className="ds-button ds-button-primary min-h-[56px] border-2 border-foreground" data-oid="261e00a219">
                 <Check className="size-5" strokeWidth={3} data-oid="ec16abb32e" />
                 Done
               </button>
             </div>
           ) : (
-            <button type="button" onClick={() => setEditing(true)} className="inline-flex min-h-[56px] items-center gap-ds-sm font-display text-[56px] font-black leading-none tracking-[-0.03em]" data-oid="f508977d75" data-oid-text-editable="false">
-              {fmt(balance)}
+            <button type="button" onClick={() => setEditing(true)} className="inline-flex min-h-[56px] items-center gap-ds-sm font-display text-[56px] font-black leading-none tracking-[-0.03em]" data-oid="f508977d75">
+              <CountUp value={balance} format={fmt} />
               <Pencil className="size-5 text-muted-foreground" strokeWidth={2.5} data-oid="8029fd7385" />
             </button>
           )}
@@ -163,7 +168,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
             <p className="font-caption text-caption uppercase" data-oid="5234bc3fa4">{PERIOD_UNIT[period]}</p>
           </div>
           <motion.div key={period} data-oid="1a6d696320" {...NUMBER_SWAP} data-oid-component="1a6d696320" data-oid-attr-dynamic="placeholder">
-            <p className="px-ds-md pb-ds-sm pt-ds-xs text-center font-caption text-[32px] font-bold leading-tight" data-oid="c76017d058">{money(summary.totalSpending * f)}</p>
+            <p className="px-ds-md pb-ds-sm pt-ds-xs text-center font-caption text-[32px] font-bold leading-tight" data-oid="c76017d058"><CountUp value={summary.totalSpending * f} format={money} /></p>
           </motion.div>
         </section>
 
@@ -172,7 +177,7 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
             <h2 className="font-label text-label font-extrabold uppercase" data-oid="9e9f5a8e96">Earn</h2>
           </div>
           <motion.div key={period} data-oid="02d0a5817b" {...NUMBER_SWAP} transition={{ ...NUMBER_SWAP.transition, delay: 0.04 }} data-oid-component="02d0a5817b" data-oid-attr-dynamic="placeholder">
-            <p className="px-ds-sm pb-ds-sm pt-ds-xs text-center font-caption text-[20px] font-bold leading-tight" data-oid="7f3da1ddfa">{money(summary.takeHome * f)}</p>
+            <p className="px-ds-sm pb-ds-sm pt-ds-xs text-center font-caption text-[20px] font-bold leading-tight" data-oid="7f3da1ddfa"><CountUp value={summary.takeHome * f} format={money} /></p>
           </motion.div>
         </section>
 
@@ -181,16 +186,16 @@ export function BoardHeader({ summary, balance, onBalanceChange, compactTitle, p
             <h2 className="font-label text-label font-extrabold uppercase" data-oid="9f635d95e8">Save</h2>
           </div>
           <motion.div key={period} data-oid="a60bb30eee" {...NUMBER_SWAP} transition={{ ...NUMBER_SWAP.transition, delay: 0.08 }} data-oid-component="a60bb30eee" data-oid-attr-dynamic="placeholder">
-            <p className="px-ds-sm pb-ds-sm pt-ds-xs text-center font-caption text-[20px] font-bold leading-tight" data-oid="c1febfe4c4">{money(summary.totalSaving * f)}</p>
+            <p className="px-ds-sm pb-ds-sm pt-ds-xs text-center font-caption text-[20px] font-bold leading-tight" data-oid="c1febfe4c4"><CountUp value={summary.totalSaving * f} format={money} /></p>
           </motion.div>
         </section>
 
         <section data-negative={leftover < 0} className="col-span-2 flex items-center justify-between gap-ds-sm border-4 border-foreground bg-card px-ds-md py-ds-sm transition-colors duration-300 data-[negative=true]:bg-primary data-[negative=true]:text-primary-foreground" data-oid="34544a1d96">
           <h2 className="font-label text-label font-extrabold uppercase" data-oid="b9c7513a70">{leftover < 0 ? "Over budget" : "Left over"}</h2>
           <motion.div key={period} data-oid="3b7718b492" {...NUMBER_SWAP} transition={{ ...NUMBER_SWAP.transition, delay: 0.12 }} data-oid-component="3b7718b492" data-oid-attr-dynamic="placeholder">
-            <p className="font-caption text-[20px] font-bold leading-tight" data-oid="01a20ee0aa" data-oid-text-editable="false" data-oid-text-source="expression:10fc05582f95|expression:ca0cc105110e">
+            <p className="font-caption text-[20px] font-bold leading-tight" data-oid="01a20ee0aa" data-oid-text-editable="false">
               {leftover < 0 ? "−" : ""}
-              {money(Math.abs(leftover))}
+              <CountUp value={Math.abs(leftover)} format={money} />
             </p>
           </motion.div>
         </section>

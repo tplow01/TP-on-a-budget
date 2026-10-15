@@ -2,9 +2,11 @@ import { useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Plus, Trash2 } from "lucide-react"
 import { cn } from "@vibe/ui"
-import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, fmt, monthlyOf, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
+import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt, monthlyOf, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, Toggle } from "./fields"
+import { CountUp } from "./CountUp"
+import { getLastUsed } from "../../lib/prefs"
 
 interface Props {
   state: BudgetState
@@ -39,16 +41,27 @@ export function SpendingBoard({ state, summary, actions }: Props) {
 
   const paused = state.items.filter((i) => !i.enabled)
   const pausedCount = paused.length
+  const last = getLastUsed()
+  const lastCat = categoryById(last.category)
+  const quickAdd = () => {
+    actions.addItem()
+    window.setTimeout(() => document.getElementById(`cat-${last.category}`)?.scrollIntoView({ behavior: "smooth", block: "end" }), 60)
+  }
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:c56d6e7f9ddd|expression:461cf3181858">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:button|element:nav|expression:4225382442cc|expression:461cf3181858">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
           <p className="font-caption text-caption text-muted-foreground" data-oid="b093783693" data-oid-text-editable="false" data-oid-text-source="expression:3e9a72a5540b|text">{pausedCount} paused · switched-off costs move to the bottom</p>
         </div>
-        <p className="font-display text-[28px] font-black leading-none" data-oid="8d753d8329">{fmt(summary.totalSpending)}</p>
+        <p className="font-display text-[28px] font-black leading-none" data-oid="8d753d8329"><CountUp value={summary.totalSpending} format={fmt} /></p>
       </section>
+
+      <button type="button" onClick={quickAdd} className="ds-button ds-button-primary min-h-[56px] w-full border-2 border-foreground shadow-[4px_4px_0_0_var(--foreground)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_var(--foreground)]" data-oid="5e9867e9b3" data-oid-text-editable="false">
+        <Plus className="size-5" strokeWidth={3} data-oid="f143d9431e" />
+        Add to {lastCat.name} · {FREQUENCY_LABEL[last.frequency]}
+      </button>
 
       <nav aria-label="Jump to category" className="-mx-ds-md flex gap-ds-sm overflow-x-auto px-ds-md pb-ds-xs" data-oid="a71d08e309">
         {CATEGORIES.map((cat, index) => (
@@ -66,7 +79,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id && i.enabled)
         return (
-          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
+          <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md scroll-mb-[140px] border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
               <div className="flex items-baseline justify-between gap-ds-sm" data-oid="4423a87d05" data-oid-shared="true" data-oid-instance-targetable="true">
                 <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="f9eee1ccd1" data-oid-shared="true" data-oid-instance-targetable="true">{cat.name}</h3>

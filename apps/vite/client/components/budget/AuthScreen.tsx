@@ -1,35 +1,46 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowRight, Copy, KeyRound, Mail, UserPlus } from "lucide-react"
 import { supabase } from "../../lib/supabase"
+import { success } from "../../lib/haptics"
 
-type Mode = "password" | "code"
+type Mode = "link" | "password"
 
 const redirectUrl = () => window.location.origin + import.meta.env.BASE_URL
+const RESEND_SECONDS = 60
 
 /** Turn Supabase auth errors into something actionable. */
 function explain(message: string): string {
   const m = message.toLowerCase()
   if (m.includes("invalid login credentials"))
-    return "Email or password doesn't match. If you haven't made an account with a password yet (e.g. you first tried the email code), tap Create account instead — or delete the user in Supabase → Authentication → Users and create it again."
+    return "Email or password doesn't match. No password yet? Use the email link instead. You can always sign in that way."
   if (m.includes("email not confirmed"))
-    return "This account is waiting for email confirmation. In Supabase → Authentication → Users, open your user and confirm it (or delete it), turn off “Confirm email” under Sign In / Providers → Email, then try again."
+    return "This account is waiting for email confirmation. Use the email link tab, or turn off “Confirm email” in Supabase → Authentication → Sign In / Providers → Email."
   if (m.includes("already registered") || m.includes("already been registered"))
-    return "That email already has an account. Tap Sign in — if the password is rejected, the account was made without one: delete it in Supabase → Authentication → Users and create it again."
+    return "That email already has an account. Tap Sign in, or use the email link if you don't remember the password."
   if (m.includes("password should be") || m.includes("weak")) return `Password too weak: ${message}`
+  if (m.includes("rate limit") || m.includes("security purposes")) return "Too many emails just now. Wait a minute and try again."
+  if (m.includes("expired") || m.includes("invalid") && m.includes("token")) return "That code has expired or was already used. Send a new link."
   if (m.includes("signups not allowed") || m.includes("signup is disabled"))
     return "Sign-ups are turned off. Enable them in Supabase → Authentication → Sign In / Providers."
   return message
 }
 
 export function AuthScreen({ onSkip }: { onSkip: () => void }) {
-  const [mode, setMode] = useState<Mode>("password")
+  const [mode, setMode] = useState<Mode>("link")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [code, setCode] = useState("")
-  const [codeSent, setCodeSent] = useState(false)
+  const [sentTo, setSentTo] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => window.clearTimeout(t)
+  }, [cooldown])
 
   const run = async (fn: () => Promise<{ error: { message: string } | null }>) => {
     setBusy(true)
@@ -41,142 +52,147 @@ export function AuthScreen({ onSkip }: { onSkip: () => void }) {
     return !error
   }
 
-  const signIn = () =>
-    run(() => supabase!.auth.signInWithPassword({ email: email.trim(), password }))
+  const sendLink = async () => {
+    const to = email.trim()
+    const ok = await run(() => supabase!.auth.signInWithOtp({ email: to, options: { shouldCreateUser: true, emailRedirectTo: redirectUrl() } }))
+    if (ok) {
+      setSentTo(to)
+      setCooldown(RESEND_SECONDS)
+      success()
+    }
+  }
+
+  const verify = () => run(() => supabase!.auth.verifyOtp({ email: (sentTo ?? email).trim(), token: code.trim(), type: "email" }))
+
+  const signIn = () => run(() => supabase!.auth.signInWithPassword({ email: email.trim(), password }))
 
   const signUp = async () => {
     setBusy(true)
     setError(null)
     setNotice(null)
-    const { data, error } = await supabase!.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { emailRedirectTo: redirectUrl() },
-    })
+    const { data, error } = await supabase!.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: redirectUrl() } })
     setBusy(false)
     if (error) return setError(explain(error.message))
-    if (data.user && data.user.identities?.length === 0) {
-      return setError(explain("already registered"))
-    }
-    if (!data.session) {
-      setNotice(
-        "Account created, but Supabase wants the email confirmed first. To skip that: Supabase → Authentication → Sign In / Providers → Email → turn off “Confirm email”, then tap Sign in.",
-      )
-    }
+    if (data.user && data.user.identities?.length === 0) return setError(explain("already registered"))
+    if (!data.session) setNotice("Account created. Check your email to confirm it, then sign in.")
   }
-
-  const sendCode = async () => {
-    const ok = await run(() =>
-      supabase!.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: redirectUrl() } }),
-    )
-    if (ok) setCodeSent(true)
-  }
-
-  const verify = () => run(() => supabase!.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" }))
 
   return (
-    <main className="relative min-h-screen bg-background text-foreground" data-oid="96384403e2" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
-      <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-ds-md py-ds-3xl" data-oid="a32f187891">
-        <section className="border-4 border-foreground bg-card" data-oid="a6361494a2" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|element:div|expression:bb2e621d2446|expression:b70466ab836b">
-          <div className="m-ds-xs border-2 border-foreground bg-primary px-ds-md py-ds-md text-center text-primary-foreground" data-oid="d5f6e3ddf4">
-            <p className="font-caption text-caption uppercase" data-oid="689cbdb71f">Sync across devices</p>
-            <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="fdc167dc0b">Sign in</h1>
+    <main className="relative min-h-screen bg-background text-foreground" data-oid="868fc29f7b" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+      <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-ds-md pb-[56px] pt-[72px]" data-oid="81d4b27f6e">
+        <section className="border-4 border-foreground bg-card shadow-[6px_6px_0_0_var(--foreground)]" data-oid="35db043b50" data-oid-text-editable="false" data-oid-text-source="element:div|element:div|element:div|expression:bd3e71572039|expression:c49cb531f8ee|element:details">
+          <div className="m-ds-xs border-2 border-foreground bg-primary px-ds-md py-ds-md text-center text-primary-foreground" data-oid="90a732d591">
+            <p className="font-caption text-caption uppercase" data-oid="64b176807f">Collect your budget</p>
+            <h1 className="font-heading text-heading font-extrabold uppercase" data-oid="e2f6c33921">Sign in</h1>
           </div>
 
-          <div role="tablist" aria-label="Sign-in method" className="mx-ds-md mt-ds-sm grid grid-cols-2 border-2 border-foreground" data-oid="98db39a5f6">
-            <button type="button" role="tab" aria-selected={mode === "password"} onClick={() => setMode("password")} className="min-h-[48px] border-r-2 border-foreground bg-muted font-label text-label font-bold uppercase text-muted-foreground aria-selected:bg-card aria-selected:text-foreground" data-oid="0fb5da6d44">
+          <div role="tablist" aria-label="Sign-in method" className="mx-ds-md mt-ds-sm grid grid-cols-2 border-2 border-foreground" data-oid="65638ad4f2">
+            <button type="button" role="tab" aria-selected={mode === "link"} onClick={() => setMode("link")} className="min-h-[48px] border-r-2 border-foreground bg-muted font-label text-label font-bold uppercase text-muted-foreground aria-selected:bg-card aria-selected:text-foreground" data-oid="f49dc311cd">
+              Email link
+            </button>
+            <button type="button" role="tab" aria-selected={mode === "password"} onClick={() => setMode("password")} className="min-h-[48px] bg-muted font-label text-label font-bold uppercase text-muted-foreground aria-selected:bg-card aria-selected:text-foreground" data-oid="4727c8620f">
               Password
             </button>
-            <button type="button" role="tab" aria-selected={mode === "code"} onClick={() => setMode("code")} className="min-h-[48px] bg-muted font-label text-label font-bold uppercase text-muted-foreground aria-selected:bg-card aria-selected:text-foreground" data-oid="c11e0f0f8f">
-              Email code
-            </button>
           </div>
 
-          <div className="space-y-ds-md p-ds-md" data-oid="5d5e5c4d29" data-oid-text-editable="false" data-oid-text-source="element:label|expression:f8ac0c4fd8dd">
-            <label className="ds-field" data-oid="5781d1aefc">
-              <span className="ds-field-label uppercase" data-oid="70f6d2b465">Email</span>
+          <div className="space-y-ds-md p-ds-md" data-oid="94841c4a50" data-oid-text-editable="false" data-oid-text-source="element:label|expression:d10f8c63493f">
+            <label className="ds-field" data-oid="715504ba69">
+              <span className="ds-field-label uppercase" data-oid="a8704fef2b">Email</span>
               <input
                 type="email"
                 inputMode="email"
-                autoComplete="email"
+                autoComplete="username email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-body text-[17px]" data-oid="1849bb9540"
+                className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-body text-[17px]" data-oid="d68717a397"
               />
             </label>
 
-            {mode === "password" ? (
+            {mode === "link" ? (
               <>
-                <label className="ds-field" data-oid="cf3b9b25d9">
-                  <span className="ds-field-label uppercase" data-oid="a4d9060e03">Password</span>
+                {sentTo ? (
+                  <>
+                    <div className="border-2 border-foreground bg-warning px-ds-sm py-ds-sm text-warning-foreground" data-oid="1678871748">
+                      <p className="font-label text-label font-extrabold uppercase" data-oid="991d346f0d">Check your email</p>
+                      <p className="font-body text-[14px] leading-snug" data-oid="9190e956bb" data-oid-text-editable="false" data-oid-text-source="text|expression:7b70acaececf|text">Tap the link we sent to {sentTo}, or type the 6-digit code from the same email.</p>
+                    </div>
+                    <label className="ds-field" data-oid="fe8030c9e3">
+                      <span className="ds-field-label uppercase" data-oid="e3468ceec8">Code from email</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={8}
+                        value={code}
+                        onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                        placeholder="123456"
+                        className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-caption text-[22px] tracking-[0.3em]" data-oid="7e9459d87b"
+                      />
+                    </label>
+                    <button type="button" disabled={busy || code.length < 6} onClick={() => void verify()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="fbcaf9d413" data-oid-text-editable="false">
+                      <ArrowRight className="size-5" strokeWidth={2.5} data-oid="503f7f6876" />
+                      {busy ? "Checking…" : "Sign in"}
+                    </button>
+                    <button type="button" disabled={busy || cooldown > 0} onClick={() => void sendLink()} className="ds-button ds-button-secondary min-h-[52px] w-full border-2 border-foreground" data-oid="a7193c4736" data-oid-text-editable="false">
+                      <Mail className="size-5" strokeWidth={2.5} data-oid="3c0fbd0fdb" />
+                      {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" disabled={busy || !email.includes("@")} onClick={() => void sendLink()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="cdab10c5df" data-oid-text-editable="false">
+                      <Mail className="size-5" strokeWidth={2.5} data-oid="faa7c23397" />
+                      {busy ? "Sending…" : "Email me a sign-in link"}
+                    </button>
+                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="b43bf3f93b">No password to remember or reset. New here? The same link creates your account.</p>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <label className="ds-field" data-oid="54aa9963ac">
+                  <span className="ds-field-label uppercase" data-oid="492600a309">Password</span>
                   <input
                     type="password"
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 6 characters"
-                    className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-body text-[17px]" data-oid="afd8ce44e2"
+                    className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-body text-[17px]" data-oid="0a6371b45f"
                   />
                 </label>
-                <button type="button" disabled={busy || !email || !password} onClick={() => void signIn()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="eb3ad1bff8" data-oid-text-editable="false">
-                  <KeyRound className="size-5" strokeWidth={2.5} data-oid="bb28e76578" />
+                <button type="button" disabled={busy || !email || !password} onClick={() => void signIn()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="88c4ae97d6" data-oid-text-editable="false">
+                  <KeyRound className="size-5" strokeWidth={2.5} data-oid="4bad4c724d" />
                   {busy ? "Working…" : "Sign in"}
                 </button>
-                <button type="button" disabled={busy || !email || password.length < 6} onClick={() => void signUp()} className="ds-button ds-button-secondary min-h-[56px] w-full border-2 border-foreground" data-oid="33906b8dfc">
-                  <UserPlus className="size-5" strokeWidth={2.5} data-oid="1a6033df79" />
+                <button type="button" disabled={busy || !email || password.length < 6} onClick={() => void signUp()} className="ds-button ds-button-secondary min-h-[56px] w-full border-2 border-foreground" data-oid="75ed1c2499">
+                  <UserPlus className="size-5" strokeWidth={2.5} data-oid="7f4af4a09e" />
                   Create account
                 </button>
-              </>
-            ) : (
-              <>
-                {codeSent ? (
-                  <label className="ds-field" data-oid="e74b3e4186">
-                    <span className="ds-field-label uppercase" data-oid="70f36e3adc">Code from email</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                      placeholder="123456"
-                      className="ds-input min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-md font-caption text-[22px] tracking-[0.3em]" data-oid="4c720ba00d"
-                    />
-                  </label>
-                ) : null}
-                {codeSent ? (
-                  <button type="button" disabled={busy || !code} onClick={() => void verify()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="1353680704" data-oid-text-editable="false">
-                    <ArrowRight className="size-5" strokeWidth={2.5} data-oid="5fba89f537" />
-                    {busy ? "Checking…" : "Sign in"}
-                  </button>
-                ) : (
-                  <button type="button" disabled={busy || !email} onClick={() => void sendCode()} className="ds-button ds-button-primary min-h-[60px] w-full border-2 border-foreground" data-oid="3c4e7e6b90" data-oid-text-editable="false">
-                    <Mail className="size-5" strokeWidth={2.5} data-oid="e4704bb559" />
-                    {busy ? "Sending…" : "Send code"}
-                  </button>
-                )}
-                <div className="space-y-ds-xs border-2 border-dashed border-foreground p-ds-sm" data-oid="383a2657d9">
-                  <p className="font-body text-[14px] leading-snug" data-oid="37531c77d7">
-                    No code in the email, or the link opens localhost? In Supabase, add <code className="font-caption" data-oid="8991f401b9">{"{{ .Token }}"}</code> to Authentication → Email Templates → Magic Link, and add this address under Authentication → URL Configuration:
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void navigator.clipboard?.writeText(redirectUrl())}
-                    className="flex min-h-[44px] w-full items-center gap-ds-xs rounded-md border-2 border-foreground bg-background px-ds-sm text-left" data-oid="e8340902c0"
-                  >
-                    <code className="min-w-0 flex-1 break-all font-caption text-caption" data-oid="5537f82319">{redirectUrl()}</code>
-                    <Copy className="size-4 shrink-0" strokeWidth={2.5} data-oid="60b08d0bf0" />
-                  </button>
-                </div>
+                <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="7e9d5e18cf">Save the password to iCloud Keychain when asked. Next time Safari fills it in with Face ID.</p>
               </>
             )}
           </div>
 
-          {notice ? <p className="mx-ds-md mb-ds-md border-2 border-foreground bg-warning px-ds-sm py-ds-xs font-body text-[14px] text-warning-foreground" data-oid="4f80de1afb">{notice}</p> : null}
-          {error ? <p className="mx-ds-md mb-ds-md border-2 border-foreground bg-primary px-ds-sm py-ds-xs font-body text-[14px] text-primary-foreground" data-oid="930e05e323">{error}</p> : null}
+          {notice ? <p className="mx-ds-md mb-ds-md border-2 border-foreground bg-warning px-ds-sm py-ds-xs font-body text-[14px] text-warning-foreground" data-oid="f98e798750">{notice}</p> : null}
+          {error ? <p className="mx-ds-md mb-ds-md border-2 border-foreground bg-primary px-ds-sm py-ds-xs font-body text-[14px] text-primary-foreground" data-oid="e98044a451">{error}</p> : null}
+
+          <details className="mx-ds-md mb-ds-md border-2 border-dashed border-foreground p-ds-sm" data-oid="3473394bc9">
+            <summary className="min-h-[44px] cursor-pointer content-center font-label text-[12px] font-bold uppercase tracking-[0.06em]" data-oid="513795231f">Link not arriving?</summary>
+            <div className="space-y-ds-xs pt-ds-xs" data-oid="0e373ef2dd">
+              <p className="font-body text-[14px] leading-snug" data-oid="88896adb82">
+                In Supabase, add <code className="font-caption" data-oid="ba11d93c9b">{"{{ .Token }}"}</code> to Authentication → Email Templates → Magic Link, and add this address under Authentication → URL Configuration:
+              </p>
+              <button type="button" onClick={() => void navigator.clipboard?.writeText(redirectUrl())} className="flex min-h-[44px] w-full items-center gap-ds-xs rounded-md border-2 border-foreground bg-background px-ds-sm text-left" data-oid="57a4dd4284">
+                <code className="min-w-0 flex-1 break-all font-caption text-caption" data-oid="96671aafc3">{redirectUrl()}</code>
+                <Copy className="size-4 shrink-0" strokeWidth={2.5} data-oid="45d8efe2d0" />
+              </button>
+            </div>
+          </details>
         </section>
 
-        <button type="button" onClick={onSkip} className="mt-ds-lg min-h-[52px] font-label text-label font-bold uppercase text-muted-foreground underline underline-offset-4" data-oid="ef839d2179">
+        <button type="button" onClick={onSkip} className="mt-ds-lg min-h-[52px] font-label text-label font-bold uppercase text-muted-foreground underline underline-offset-4" data-oid="cde52abccc">
           Use on this device only
         </button>
       </div>

@@ -1,5 +1,5 @@
-import { Info } from "lucide-react"
-import { fmt, pct, type BudgetState, type Summary } from "../../lib/budget"
+import { CalendarDays, Info } from "lucide-react"
+import { PAYS_PER_YEAR, fmt, pct, type BudgetState, type PayFrequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, Toggle } from "./fields"
 
@@ -84,10 +84,47 @@ export function IncomePanel({ state, summary, actions }: Props) {
         </dl>
       </section>
 
+      {/* Payday */}
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="d0f63a7331">
+        <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-primary px-ds-md py-ds-sm text-primary-foreground" data-oid="ff3be437d7">
+          <CalendarDays className="size-5" strokeWidth={2.5} data-oid="9060910176" />
+          <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="65ee6c99f8">Payday</h3>
+        </div>
+        <div className="space-y-ds-md p-ds-md" data-oid="de162639fd" data-oid-text-editable="false" data-oid-text-source="element:label|expression:4b07f42ef345|element:p">
+          <label className="ds-field" data-oid="ce9ff2277c">
+            <span className="ds-field-label uppercase" data-oid="937427b52c">How often you're paid</span>
+            <select
+              value={inc.payFrequency}
+              onChange={(e) => actions.updateIncome({ payFrequency: e.target.value as PayFrequency })}
+              className="min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[16px]" data-oid="daba2ae0d9"
+            >
+              <option value="weekly" data-oid="1824978eb2">Weekly</option>
+              <option value="fortnightly" data-oid="f84deb1ec3">Every 2 weeks</option>
+              <option value="semimonthly" data-oid="5ad2f78361">Twice a month (15th & last day)</option>
+              <option value="monthly" data-oid="1a2f502f60">Monthly</option>
+            </select>
+          </label>
+          {inc.payFrequency === "semimonthly" ? (
+            <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="c157c21a7c">Paid on the 15th and the last day of each month.</p>
+          ) : (
+            <label className="ds-field" data-oid="ec0f47bc62">
+              <span className="ds-field-label uppercase" data-oid="8fdb1418d2">Next (or last) payday</span>
+              <input
+                type="date"
+                value={inc.nextPayday}
+                onChange={(e) => actions.updateIncome({ nextPayday: e.target.value })}
+                className="min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[16px]" data-oid="348d781628"
+              />
+            </label>
+          )}
+          <p className="font-caption text-caption text-muted-foreground" data-oid="38ecba0def" data-oid-text-editable="false" data-oid-text-source="text|expression:4076aadc78c1|text">Each paycheck ≈ {fmt((summary.takeHome * 12) / PAYS_PER_YEAR[inc.payFrequency])} · bills are grouped by payday on Overview.</p>
+        </div>
+      </section>
+
       {/* Payslip override */}
-      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="d0f63a7331" data-oid-text-editable="false" data-oid-text-source="element:div|expression:13274ca6c32a">
-        <div className="flex items-center gap-ds-md p-ds-md" data-oid="ff3be437d7">
-          <div className="flex-1" data-oid="9060910176">
+      <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="9f0c5c0795" data-oid-text-editable="false" data-oid-text-source="element:div|expression:13274ca6c32a">
+        <div className="flex items-center gap-ds-md p-ds-md" data-oid="f96b54de6a">
+          <div className="flex-1" data-oid="f4f4b5870e">
             <h3 className="font-label text-label font-bold uppercase" data-oid="1a4e9cf0e1">Use my real payslip</h3>
             <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="dfcde9ee4d">Once you know your actual net pay, override the estimate.</p>
           </div>

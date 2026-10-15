@@ -77,8 +77,8 @@ export default function Index() {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background/70 sm:border-x-4 sm:border-foreground" data-oid="521d31b0ed">
         <BoardHeader key={tab === "board" ? "full" : "compact"} summary={summary} balance={state.totalBalance} onBalanceChange={actions.setTotalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={tab === "board" ? undefined : TITLES[tab]} />
-        <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "board"} data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:90231e444059|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
-          {tab === "board" ? <BoardOverview state={state} summary={summary} scenario={scenarioActive ? scenario : null} onNavigate={go} /> : null}
+        <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "board"} data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:11ce88c87ab1|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
+          {tab === "board" ? <BoardOverview state={state} summary={summary} scenario={scenarioActive ? scenario : null} onNavigate={go} onOpenProfile={() => setProfileOpen(true)} /> : null}
 
           {tab === "income" ? <IncomePanel state={state} summary={summary} actions={actions} /> : null}
           {tab === "spend" ? <SpendingBoard state={state} summary={summary} actions={actions} /> : null}

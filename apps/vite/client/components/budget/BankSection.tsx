@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react"
 import { usePlaidLink } from "react-plaid-link"
 import { Landmark, Plus, RefreshCw, Unlink } from "lucide-react"
 import { fmt2 } from "../../lib/budget"
+import { BANK_UPDATED_EVENT } from "../../lib/transactions"
+import { success } from "../../lib/haptics"
 import {
   cashTotal,
   clearLinkToken,
@@ -28,6 +30,7 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
   const apply = useCallback(
     (list: BankAccount[]) => {
       setAccounts(list)
+      window.dispatchEvent(new Event(BANK_UPDATED_EVENT))
       if (list.some((a) => a.type === "depository")) onTotal(cashTotal(list))
     },
     [onTotal],
@@ -63,6 +66,7 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
       void run("Linking", async () => {
         const { accounts } = await exchangePublicToken(publicToken, metadata.institution?.name ?? null)
         apply(accounts)
+        success()
       })
     },
     onExit: (err) => {

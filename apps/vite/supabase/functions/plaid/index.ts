@@ -32,7 +32,11 @@ async function plaid<T = any>(path: string, body: Record<string, unknown>): Prom
     body: JSON.stringify({ client_id: PLAID_CLIENT_ID, secret: PLAID_SECRET, ...body }),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.display_message ?? data.error_message ?? `Plaid error on ${path}`)
+  if (!res.ok) {
+    const err = new Error(data.display_message ?? data.error_message ?? `Plaid error on ${path}`) as Error & { code?: string }
+    err.code = data.error_code
+    throw err
+  }
   return data as T
 }
 
@@ -55,6 +59,50 @@ async function syncItem(userId: string, itemId: string, accessToken: string, ins
   if (rows.length) {
     const { error } = await admin.from("bank_accounts").upsert(rows, { onConflict: "account_id" })
     if (error) throw error
+  }
+}
+
+/** Pull new/changed/removed transactions since the saved cursor (Plaid /transactions/sync). */
+async function syncTransactions(userId: string, itemId: string, accessToken: string, startCursor: string | null) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      let cursor: string | undefined = startCursor ?? undefined
+      const changed: any[] = []
+      const removed: string[] = []
+      let hasMore = true
+      while (hasMore) {
+        const page = await plaid<any>("/transactions/sync", { access_token: accessToken, count: 500, ...(cursor ? { cursor } : {}) })
+        changed.push(...page.added, ...page.modified)
+        removed.push(...page.removed.map((r: any) => r.transaction_id))
+        hasMore = page.has_more
+        cursor = page.next_cursor
+      }
+      const rows = changed.map((t) => ({
+        transaction_id: t.transaction_id,
+        user_id: userId,
+        item_id: itemId,
+        account_id: t.account_id,
+        date: t.date,
+        name: t.name,
+        merchant_name: t.merchant_name,
+        amount: t.amount,
+        iso_currency_code: t.iso_currency_code,
+        pfc_primary: t.personal_finance_category?.primary ?? null,
+        pfc_detailed: t.personal_finance_category?.detailed ?? null,
+        pending: t.pending,
+      }))
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await admin.from("transactions").upsert(rows.slice(i, i + 500), { onConflict: "transaction_id" })
+        if (error) throw error
+      }
+      if (removed.length) await admin.from("transactions").delete().in("transaction_id", removed).eq("user_id", userId)
+      await admin.from("plaid_items").update({ cursor }).eq("item_id", itemId)
+      return
+    } catch (e) {
+      // Plaid asks us to restart pagination if data changed mid-sync.
+      if (attempt === 0 && (e as { code?: string }).code === "TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION") continue
+      throw e
+    }
   }
 }
 
@@ -91,6 +139,7 @@ Deno.serve(async (req) => {
           products: ["transactions"],
           country_codes: ["US"],
           language: "en",
+          transactions: { days_requested: 180 },
           ...(PLAID_REDIRECT_URI ? { redirect_uri: PLAID_REDIRECT_URI } : {}),
         })
         return json({ link_token: data.link_token })
@@ -105,13 +154,18 @@ Deno.serve(async (req) => {
         const { error } = await admin.from("plaid_items").upsert({ item_id, user_id: userId, access_token, institution }, { onConflict: "item_id" })
         if (error) throw error
         await syncItem(userId, item_id, access_token, institution)
+        // Plaid may still be gathering history right after linking; Refresh picks up the rest.
+        await syncTransactions(userId, item_id, access_token, null).catch((e) => console.error("transactions", e))
         return json({ accounts: await listAccounts(userId) })
       }
 
       case "refresh": {
-        const { data: items, error } = await admin.from("plaid_items").select("item_id, access_token, institution").eq("user_id", userId)
+        const { data: items, error } = await admin.from("plaid_items").select("item_id, access_token, institution, cursor").eq("user_id", userId)
         if (error) throw error
-        for (const it of items ?? []) await syncItem(userId, it.item_id, it.access_token, it.institution)
+        for (const it of items ?? []) {
+          await syncItem(userId, it.item_id, it.access_token, it.institution)
+          await syncTransactions(userId, it.item_id, it.access_token, it.cursor).catch((e) => console.error("transactions", e))
+        }
         return json({ accounts: await listAccounts(userId) })
       }
 

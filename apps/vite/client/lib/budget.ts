@@ -15,6 +15,9 @@ export const LOCALE = "en-US"
 
 export type Frequency = "weekly" | "fortnightly" | "monthly" | "quarterly" | "yearly"
 
+/** How often your paycheck lands. Semimonthly = the 15th and the last day of the month. */
+export type PayFrequency = "weekly" | "fortnightly" | "semimonthly" | "monthly"
+
 export type CategoryId = "fixed" | "food" | "lifestyle" | "health" | "buffer"
 
 export interface BudgetItem {
@@ -42,6 +45,9 @@ export interface IncomeSettings {
   /** When true, use the real payslip figure instead of the estimate. */
   overrideEnabled: boolean
   overrideMonthly: number
+  payFrequency: PayFrequency
+  /** Any past or upcoming payday (YYYY-MM-DD); not used for semimonthly. */
+  nextPayday: string
 }
 
 export interface Goals {
@@ -316,6 +322,91 @@ export function dueLabel(days: number) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Pay cycles                                                          */
+/* ------------------------------------------------------------------ */
+
+export const PAYS_PER_YEAR: Record<PayFrequency, number> = { weekly: 52, fortnightly: 26, semimonthly: 24, monthly: 12 }
+
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
+
+function nextSemimonthly(t: Date): Date {
+  const mid = new Date(t.getFullYear(), t.getMonth(), 15)
+  if (mid >= t) return mid
+  const end = new Date(t.getFullYear(), t.getMonth() + 1, 0)
+  if (end >= t) return end
+  return new Date(t.getFullYear(), t.getMonth() + 1, 15)
+}
+
+/** The next `count` paydays on or after today. Empty if no payday is set. */
+export function upcomingPaydays(inc: IncomeSettings, count: number, today = new Date()): Date[] {
+  const out: Date[] = []
+  let cursor = startOfDay(today)
+  if (inc.payFrequency === "semimonthly") {
+    while (out.length < count) {
+      const d = nextSemimonthly(cursor)
+      out.push(d)
+      cursor = addDays(d, 1)
+    }
+    return out
+  }
+  if (!parseDay(inc.nextPayday)) return out
+  while (out.length < count) {
+    const d = upcomingDueDate({ dueDate: inc.nextPayday, frequency: inc.payFrequency as Frequency }, cursor)
+    if (!d) break
+    out.push(d)
+    cursor = addDays(d, 1)
+  }
+  return out
+}
+
+/** Every due date of `item` in [start, end). */
+export function occurrencesBetween(item: Pick<BudgetItem, "dueDate" | "frequency">, start: Date, end: Date): Date[] {
+  const out: Date[] = []
+  let cursor = start
+  for (let i = 0; i < 60; i++) {
+    const d = upcomingDueDate(item, cursor)
+    if (!d || d >= end) break
+    out.push(d)
+    cursor = addDays(d, 1)
+  }
+  return out
+}
+
+export interface PayCycle {
+  start: Date
+  end: Date
+  /** The "now" window is paid from your balance; the rest from one paycheck. */
+  isNow: boolean
+  funds: number
+  bills: Array<{ item: BudgetItem; date: Date }>
+  billsTotal: number
+  remaining: number
+}
+
+/** Groups dated bills into the windows between paydays: now → payday 1 → payday 2 → … */
+export function payCycles(state: BudgetState, takeHomeMonthly: number, count = 3, today = new Date()) {
+  const paycheck = (takeHomeMonthly * 12) / PAYS_PER_YEAR[state.income.payFrequency]
+  const enabled = state.items.filter((i) => i.enabled)
+  const dated = enabled.filter((i) => parseDay(i.dueDate))
+  const paydays = upcomingPaydays(state.income, count, today)
+  const t = startOfDay(today)
+  const bounds = [t, ...paydays]
+  const cycles: PayCycle[] = []
+  for (let k = 0; k < bounds.length - 1; k++) {
+    const start = bounds[k]
+    const end = bounds[k + 1]
+    if (start.getTime() === end.getTime()) continue
+    const bills = dated
+      .flatMap((item) => occurrencesBetween(item, start, end).map((date) => ({ item, date })))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+    const billsTotal = bills.reduce((s, b) => s + Math.max(0, b.item.amount), 0)
+    const funds = k === 0 ? state.totalBalance : paycheck
+    cycles.push({ start, end, isNow: k === 0, funds, bills, billsTotal, remaining: funds - billsTotal })
+  }
+  return { cycles, paycheck, undated: enabled.length - dated.length }
+}
+
+/* ------------------------------------------------------------------ */
 /* Defaults                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -342,6 +433,8 @@ export function createDefaultState(): BudgetState {
       postTaxDeductionsMonthly: 0,
       overrideEnabled: false,
       overrideMonthly: 0,
+      payFrequency: "fortnightly",
+      nextPayday: "",
     },
     items: [],
     goals: {
@@ -371,6 +464,8 @@ export function createSampleState(): BudgetState {
       postTaxDeductionsMonthly: 0,
       overrideEnabled: false,
       overrideMonthly: 0,
+      payFrequency: "fortnightly",
+      nextPayday: "",
     },
     items: [
       item("fixed", "Rent", 1800, "monthly"),

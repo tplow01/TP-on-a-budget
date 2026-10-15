@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, CircleHelp, Landmark } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { readSavedAccounts, type BankAccount } from "../../lib/plaid"
+import { BANK_UPDATED_EVENT } from "../../lib/transactions"
+import { PayCycleCard } from "./PayCycleCard"
+import { SpendInsights } from "./SpendInsights"
 import {
   CATEGORIES,
   EMERGENCY_BAND,
@@ -25,9 +28,10 @@ interface Props {
   summary: Summary
   scenario: Summary | null
   onNavigate: (t: TabId) => void
+  onOpenProfile: () => void
 }
 
-export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
+export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProfile }: Props) {
   const segments = [
     ...CATEGORIES.map((c) => ({ key: c.id, label: c.name, value: summary.byCategory[c.id], band: c.band })),
     { key: "savings", label: state.goals.savingsName || "Savings goal", value: summary.savings, band: SAVINGS_BAND },
@@ -39,7 +43,10 @@ export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
 
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   useEffect(() => {
-    void readSavedAccounts().then(setAccounts)
+    const load = () => void readSavedAccounts().then(setAccounts)
+    load()
+    window.addEventListener(BANK_UPDATED_EVENT, load)
+    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
   }, [])
 
   const dueSoon = useMemo(() => {
@@ -56,7 +63,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
   const dueTotal = dueSoon.reduce((s, d) => s + d.item.amount, 0)
 
   return (
-    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="expression:78eabde89dfb|element:section|element:section|expression:9af74c5e9d14|element:section|element:div">
+    <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false">
       {scenario ? (
         <button
           type="button"
@@ -128,6 +135,10 @@ export function BoardOverview({ state, summary, scenario, onNavigate }: Props) {
           </ul>
         )}
       </section>
+
+      <PayCycleCard state={state} summary={summary} onNavigate={onNavigate} />
+
+      <SpendInsights summary={summary} hasAccounts={accounts.length > 0} onOpenProfile={onOpenProfile} />
 
       {/* Per-account balances */}
       {accounts.length > 0 ? (

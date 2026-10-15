@@ -10,6 +10,8 @@ import {
   type IncomeSettings,
 } from "../lib/budget"
 import { clearLocalBudget, readLocalBudget, writeLocalBudget, type BudgetStore } from "../lib/storage"
+import { getLastUsed, rememberUsed } from "../lib/prefs"
+import { success, tap } from "../lib/haptics"
 
 /** local = no cloud store · loading = first fetch · saving/synced = cloud ok · offline/error = cloud failed */
 export type SyncStatus = "local" | "loading" | "saving" | "synced" | "offline" | "error"
@@ -126,16 +128,27 @@ export function useBudget(store: BudgetStore | null) {
   const actions = useMemo(
     () => ({
       updateIncome: (patch: Partial<IncomeSettings>) => update((s) => touch({ ...s, income: { ...s.income, ...patch } })),
-      updateItem: (id: string, patch: Partial<BudgetItem>) =>
-        update((s) => touch({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) })),
-      addItem: (category: CategoryId) =>
+      updateItem: (id: string, patch: Partial<BudgetItem>) => {
+        if (patch.frequency || patch.category) rememberUsed({ frequency: patch.frequency, category: patch.category })
+        update((s) => touch({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) }))
+      },
+      /** New cost in `category` (or the last one you used), starting at your last-used frequency. */
+      addItem: (category?: CategoryId) => {
+        const last = getLastUsed()
+        const cat = category ?? last.category
+        rememberUsed({ category: cat })
+        tap()
         update((s) =>
           touch({
             ...s,
-            items: [...s.items, { id: makeId(), name: "", amount: 0, frequency: "monthly", category, enabled: true }],
+            items: [...s.items, { id: makeId(), name: "", amount: 0, frequency: last.frequency, category: cat, enabled: true }],
           }),
-        ),
-      removeItem: (id: string) => update((s) => touch({ ...s, items: s.items.filter((i) => i.id !== id) })),
+        )
+      },
+      removeItem: (id: string) => {
+        tap()
+        update((s) => touch({ ...s, items: s.items.filter((i) => i.id !== id) }))
+      },
       updateGoals: (patch: Partial<Goals>) => update((s) => touch({ ...s, goals: { ...s.goals, ...patch } })),
       setTotalBalance: (value: number) => update((s) => touch({ ...s, totalBalance: value })),
       setCut: (category: CategoryId, value: number) =>
@@ -143,7 +156,8 @@ export function useBudget(store: BudgetStore | null) {
       setIncomeChange: (value: number) => update((s) => touch({ ...s, whatIf: { ...s.whatIf, incomeChange: value } })),
       resetWhatIf: () => update((s) => touch({ ...s, whatIf: { cuts: emptyCuts(), incomeChange: 0 } })),
       /** Bake the category cuts into real item amounts, then clear the scenario. */
-      applyWhatIf: () =>
+      applyWhatIf: () => {
+        success()
         update((s) =>
           touch({
             ...s,
@@ -153,7 +167,8 @@ export function useBudget(store: BudgetStore | null) {
             }),
             whatIf: { cuts: emptyCuts(), incomeChange: 0 },
           }),
-        ),
+        )
+      },
       /** Resets to the sample budget everywhere (the reset syncs to other devices). */
       resetAll: () => {
         clearLocalBudget()
