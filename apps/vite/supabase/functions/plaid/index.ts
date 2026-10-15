@@ -2,6 +2,9 @@
 // Deploy:  supabase functions deploy plaid --no-verify-jwt
 // Secrets: supabase secrets set PLAID_CLIENT_ID=... PLAID_SECRET=... PLAID_ENV=sandbox
 // (The user's login is checked below, so the gateway JWT check isn't needed.)
+// Production: supabase secrets set PLAID_SECRET=<production secret> PLAID_ENV=production
+//             PLAID_REDIRECT_URI=https://<your-app-domain>/   ← must also be added under
+//             Plaid Dashboard → Developers → API → Allowed redirect URIs (needed for OAuth banks).
 
 import { createClient } from "npm:@supabase/supabase-js@2"
 

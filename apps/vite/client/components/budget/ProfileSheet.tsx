@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion"
+import { Link } from "react-router-dom"
 import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
 import { BankSection } from "./BankSection"
@@ -58,7 +59,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                 </button>
               </div>
 
-              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a" data-oid-text-editable="false" data-oid-text-source="element:section|expression:b4a250afb4fe|element:section|element:section">
+              <div className="space-y-ds-md p-ds-md" data-oid="ef2bbc752a" data-oid-text-editable="false" data-oid-text-source="element:section|expression:b4a250afb4fe|element:section|element:section|element:nav">
                 {/* Account */}
                 <section className="border-4 border-foreground bg-card" data-oid="080019ebe8">
                   <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-primary px-ds-md py-ds-sm text-primary-foreground" data-oid="a329fefc2e">
@@ -112,11 +113,11 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="3c1c85f252">Data</h3>
                   </div>
                   <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228">
-                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Replace your budget with the sample one. If you're signed in, this applies on all your devices.</p>
+                    <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Clear everything and start from a blank budget. If you're signed in, this applies on all your devices.</p>
                     <button
                       type="button"
                       onClick={() => {
-                        if (window.confirm("Reset everything to the sample budget?")) {
+                        if (window.confirm("Clear your whole budget and start blank?")) {
                           onReset()
                           onClose()
                         }
@@ -128,6 +129,11 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                     </button>
                   </div>
                 </section>
+
+                <nav aria-label="Legal" className="flex justify-center gap-ds-lg pt-ds-xs" data-oid="e0ecfaca56">
+                  <Link to="/privacy" className="inline-flex min-h-[44px] items-center font-label text-[12px] font-bold uppercase tracking-[0.06em] underline" data-oid="7b0048e7b7">Privacy Policy</Link>
+                  <Link to="/terms" className="inline-flex min-h-[44px] items-center font-label text-[12px] font-bold uppercase tracking-[0.06em] underline" data-oid="156fe8b25f">Terms</Link>
+                </nav>
               </div>
             </div>
           </motion.div>

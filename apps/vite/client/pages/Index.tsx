@@ -6,6 +6,7 @@ import { clearLocalBudget, createSupabaseStore } from "../lib/storage"
 import { AuthScreen } from "../components/budget/AuthScreen"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
 import { isScenarioActive, summarize } from "../lib/budget"
+import { isOAuthReturn } from "../lib/plaid"
 import { BoardHeader } from "../components/budget/BoardHeader"
 import { BoardOverview } from "../components/budget/BoardOverview"
 import { GoalsPanel } from "../components/budget/GoalsPanel"
@@ -36,7 +37,8 @@ export default function Index() {
     }
   }
   const [tab, setTab] = useState<TabId>("board")
-  const [profileOpen, setProfileOpen] = useState(false)
+  // Back from an OAuth bank login? Re-open the Profile sheet so Plaid Link can finish.
+  const [profileOpen, setProfileOpen] = useState(isOAuthReturn)
   const email = auth.session?.user.email ?? null
   const summary = useMemo(() => summarize(state), [state])
   const scenario = useMemo(() => summarize(state, state.whatIf), [state])

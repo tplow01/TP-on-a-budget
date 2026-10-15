@@ -55,6 +55,43 @@ export async function readSavedAccounts(): Promise<BankAccount[]> {
   return (data ?? []) as BankAccount[]
 }
 
+/* OAuth banks (Chase, Wells Fargo, BofA…) send the user away to their own site
+ * and back to PLAID_REDIRECT_URI with ?oauth_state_id=…. Link has to be re-opened
+ * with the SAME link token, so we keep it across the redirect. */
+const LINK_TOKEN_KEY = "plaid:linkToken"
+
+export function saveLinkToken(token: string) {
+  try {
+    localStorage.setItem(LINK_TOKEN_KEY, token)
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadLinkToken(): string | null {
+  try {
+    return localStorage.getItem(LINK_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function clearLinkToken() {
+  try {
+    localStorage.removeItem(LINK_TOKEN_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+export const isOAuthReturn = () => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("oauth_state_id")
+
+/** Drop ?oauth_state_id from the address bar once Link is done with it. */
+export function clearOAuthParams() {
+  if (!isOAuthReturn()) return
+  window.history.replaceState(null, "", window.location.pathname + window.location.hash)
+}
+
 /** Cash across checking + savings — what "My money" is set to. */
 export const cashTotal = (accounts: BankAccount[]) =>
   Math.round(accounts.filter((a) => a.type === "depository").reduce((s, a) => s + (a.current ?? 0), 0) * 100) / 100

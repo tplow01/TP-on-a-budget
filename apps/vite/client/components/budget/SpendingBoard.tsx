@@ -41,7 +41,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
   const pausedCount = paused.length
 
   return (
-    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:ce6d1325a871|expression:461cf3181858">
+    <div className="space-y-ds-lg" data-oid="72de7114ea" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false" data-oid-text-source="element:section|element:nav|expression:35181dc0b19d|expression:461cf3181858">
       <section className="flex items-end justify-between border-b-4 border-foreground pb-ds-sm" data-oid="961d05f0cf">
         <div data-oid="ca64d619f5">
           <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="5f8e3fdd9f">Spending by category</h2>
@@ -117,6 +117,16 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                       {fmt(monthlyOf(item))}
                       <span className="block font-caption text-[10px] font-normal text-muted-foreground" data-oid="e7dda15a5d" data-oid-shared="true">per month</span>
                     </output>
+                  </div>
+                  <div className="flex items-center gap-ds-sm group-data-[enabled=false]/row:opacity-50" data-oid="d396570659" data-oid-shared="true">
+                    <label htmlFor={`due-${item.id}`} className="w-28 shrink-0 font-label text-[12px] font-bold uppercase tracking-[0.06em] text-muted-foreground" data-oid="f66df4f1dd" data-oid-shared="true">Due date</label>
+                    <input
+                      id={`due-${item.id}`}
+                      type="date"
+                      value={item.dueDate ?? ""}
+                      onChange={(e) => actions.updateItem(item.id, { dueDate: e.target.value || undefined })}
+                      className="min-h-[48px] min-w-0 flex-1 rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[16px]" data-oid="5bad0fd378" data-oid-shared="true"
+                    />
                   </div>
                 </motion.li>
               ))}

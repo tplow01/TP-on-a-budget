@@ -4,7 +4,12 @@ import { Landmark, Plus, RefreshCw, Unlink } from "lucide-react"
 import { fmt2 } from "../../lib/budget"
 import {
   cashTotal,
+  clearLinkToken,
+  clearOAuthParams,
   createLinkToken,
+  isOAuthReturn,
+  loadLinkToken,
+  saveLinkToken,
   disconnectItem,
   exchangePublicToken,
   readSavedAccounts,
@@ -14,7 +19,9 @@ import {
 
 export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [linkToken, setLinkToken] = useState<string | null>(null)
+  // Coming back from an OAuth bank: resume Link with the token we stored before leaving.
+  const [oauthReturn] = useState(isOAuthReturn)
+  const [linkToken, setLinkToken] = useState<string | null>(() => (oauthReturn ? loadLinkToken() : null))
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,12 +47,19 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
 
   useEffect(() => {
     void readSavedAccounts().then(setAccounts)
-  }, [])
+    if (oauthReturn && !loadLinkToken()) {
+      clearOAuthParams()
+      setError("The bank sign-in expired. Tap Connect bank to try again.")
+    }
+  }, [oauthReturn])
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
+    receivedRedirectUri: oauthReturn && linkToken ? window.location.href : undefined,
     onSuccess: (publicToken, metadata) => {
       setLinkToken(null)
+      clearLinkToken()
+      clearOAuthParams()
       void run("Linking", async () => {
         const { accounts } = await exchangePublicToken(publicToken, metadata.institution?.name ?? null)
         apply(accounts)
@@ -53,6 +67,8 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
     },
     onExit: (err) => {
       setLinkToken(null)
+      clearLinkToken()
+      clearOAuthParams()
       if (err) setError(err.display_message || err.error_message)
     },
   })
@@ -65,6 +81,7 @@ export function BankSection({ onTotal }: { onTotal: (total: number) => void }) {
   const connect = () =>
     run("Opening", async () => {
       const { link_token } = await createLinkToken()
+      saveLinkToken(link_token)
       setLinkToken(link_token)
     })
 

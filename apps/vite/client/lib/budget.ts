@@ -25,6 +25,8 @@ export interface BudgetItem {
   category: CategoryId
   /** Switched-off items stay in the list but don't count toward totals. */
   enabled: boolean
+  /** Any past or future due date (YYYY-MM-DD); later ones are worked out from the frequency. */
+  dueDate?: string
 }
 
 export interface IncomeSettings {
@@ -255,7 +257,63 @@ const money2 = new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURR
 
 export const fmt = (n: number) => money0.format(Math.round(n) || 0)
 export const fmt2 = (n: number) => money2.format(n || 0)
-export const pct = (n: number) => `${Math.round(n * 100)}%`
+export const pct = (n: number) => (Number.isFinite(n) ? `${Math.round(n * 100)}%` : "—")
+
+/* ------------------------------------------------------------------ */
+/* Due dates                                                           */
+/* ------------------------------------------------------------------ */
+
+const MONTH_STEP: Partial<Record<Frequency, number>> = { monthly: 1, quarterly: 3, yearly: 12 }
+const DAY_STEP: Partial<Record<Frequency, number>> = { weekly: 7, fortnightly: 14 }
+
+/** Strictly parse YYYY-MM-DD as a local date; returns null for anything malformed (e.g. 2026-02-31). */
+export function parseDay(s: string | undefined | null): Date | null {
+  if (!s) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+  if (!m) return null
+  const [y, mo, d] = [Number(m[1]), Number(m[2]) - 1, Number(m[3])]
+  const date = new Date(y, mo, d)
+  if (date.getFullYear() !== y || date.getMonth() !== mo || date.getDate() !== d) return null
+  return date
+}
+
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
+
+/** Anchor + n months, keeping the anchor's day and clamping to month end (Jan 31 → Feb 28/29 → Mar 31). */
+function addMonthsClamped(anchor: Date, n: number) {
+  const y = anchor.getFullYear()
+  const m = anchor.getMonth() + n
+  const last = new Date(y, m + 1, 0).getDate()
+  return new Date(y, m, Math.min(anchor.getDate(), last))
+}
+
+/** Next time this bill is due on or after `today`, or null if it has no valid due date. */
+export function upcomingDueDate(item: Pick<BudgetItem, "dueDate" | "frequency">, today = new Date()): Date | null {
+  const anchor = parseDay(item.dueDate)
+  if (!anchor) return null
+  const t = startOfDay(today)
+  if (anchor >= t) return anchor
+  const days = DAY_STEP[item.frequency]
+  if (days) {
+    const diff = Math.round((t.getTime() - anchor.getTime()) / 86400000)
+    const k = Math.ceil(diff / days)
+    return new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + k * days)
+  }
+  const months = MONTH_STEP[item.frequency] ?? 1
+  // Always step from the original anchor so short months never drift the day.
+  let k = Math.max(0, Math.floor(((t.getFullYear() - anchor.getFullYear()) * 12 + t.getMonth() - anchor.getMonth()) / months))
+  let next = addMonthsClamped(anchor, k * months)
+  while (next < t) next = addMonthsClamped(anchor, ++k * months)
+  return next
+}
+
+export const daysUntil = (d: Date, today = new Date()) => Math.round((startOfDay(d).getTime() - startOfDay(today).getTime()) / 86400000)
+
+export function dueLabel(days: number) {
+  if (days === 0) return "Today"
+  if (days === 1) return "Tomorrow"
+  return `In ${days} days`
+}
 
 /* ------------------------------------------------------------------ */
 /* Defaults                                                            */
@@ -272,7 +330,37 @@ const item = (category: CategoryId, name: string, amount: number, frequency: Fre
   enabled,
 })
 
+/** New users start blank — every figure is theirs to fill in. */
 export function createDefaultState(): BudgetState {
+  return {
+    version: 1,
+    income: {
+      grossAnnual: 0,
+      retirementPct: 0,
+      stateTaxPct: 0,
+      preTaxDeductionsMonthly: 0,
+      postTaxDeductionsMonthly: 0,
+      overrideEnabled: false,
+      overrideMonthly: 0,
+    },
+    items: [],
+    goals: {
+      savingsName: "Savings goal",
+      savingsTarget: 0,
+      savingsSaved: 0,
+      savingsMonthly: 0,
+      emergencyMonths: 3,
+      emergencySaved: 0,
+      emergencyMonthly: 0,
+    },
+    whatIf: { cuts: emptyCuts(), incomeChange: 0 },
+    totalBalance: 0,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+/** Example budget, handy for trying the app out. */
+export function createSampleState(): BudgetState {
   return {
     version: 1,
     income: {
