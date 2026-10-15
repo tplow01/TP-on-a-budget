@@ -51,7 +51,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
             onClick={onClose} data-oid="c365b8f7b1"
           />
           <motion.div data-oid="d984a0d13a" {...SHEET} className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px]" data-oid-component="d984a0d13a" data-oid-attr-dynamic="placeholder">
-            <div role="dialog" aria-modal="true" aria-label="Profile and settings" className="max-h-[85vh] overflow-y-auto border-x-4 border-t-4 border-foreground bg-background pb-[calc(env(safe-area-inset-bottom)+34px)]" data-oid="85bd91eed6">
+            <div role="dialog" aria-modal="true" aria-label="Profile and settings" className="max-h-[85vh] overflow-y-auto border-x-4 border-t-4 border-foreground bg-background pb-[max(env(safe-area-inset-bottom),34px)]" data-oid="85bd91eed6">
               <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-card px-ds-md py-ds-md" data-oid="6e14817ef5">
                 <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="bce7d771af">Profile</h2>
                 <button type="button" onClick={onClose} aria-label="Close" className="flex size-12 items-center justify-center rounded-md border-2 border-foreground bg-card active:scale-90" data-oid="df74edd5b3">
