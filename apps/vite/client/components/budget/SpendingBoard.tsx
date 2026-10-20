@@ -63,18 +63,21 @@ export function SpendingBoard({ state, summary, actions }: Props) {
         Add to {lastCat.name} · {FREQUENCY_LABEL[last.frequency]}
       </button>
 
-      <nav aria-label="Jump to category" className="-mx-ds-md flex gap-ds-sm overflow-x-auto px-ds-md pb-ds-xs" data-oid="a71d08e309">
-        {CATEGORIES.map((cat, index) => (
-          <a
-            key={cat.id}
-            href={`#cat-${cat.id}`}
-            data-index={index}
-            className={cn("shrink-0 rounded-full border-2 border-foreground px-ds-md py-ds-xs font-label text-[12px] font-bold uppercase tracking-[0.06em]", cat.band, cat.bandText)} data-oid="273eeae834" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true"
-          >
-            {cat.name}
-          </a>
-        ))}
-      </nav>
+      <div className="relative -mx-ds-md">
+        <nav aria-label="Jump to category" className="flex gap-ds-sm overflow-x-auto px-ds-md pb-ds-xs" data-oid="a71d08e309">
+          {CATEGORIES.map((cat, index) => (
+            <a
+              key={cat.id}
+              href={`#cat-${cat.id}`}
+              data-index={index}
+              className={cn("shrink-0 rounded-full border-2 border-foreground px-ds-md py-ds-xs font-label text-[12px] font-bold uppercase tracking-[0.06em]", cat.band, cat.bandText)} data-oid="273eeae834" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true"
+            >
+              {cat.name}
+            </a>
+          ))}
+        </nav>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-background" />
+      </div>
 
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id && i.enabled)

@@ -12,10 +12,12 @@ interface Props {
 export function GoalsPanel({ state, summary, actions }: Props) {
   const g = state.goals
   const savingsProgress = g.savingsTarget > 0 ? g.savingsSaved / g.savingsTarget : 0
-  const savingsEta = etaLabel(monthsTo(g.savingsTarget - g.savingsSaved, g.savingsMonthly))
+  // A $0 target is "unset", not "reached" — monthsTo/etaLabel treat remaining <= 0 as done,
+  // which is only true once there's a real target to be done with.
+  const savingsEta = g.savingsTarget > 0 ? etaLabel(monthsTo(g.savingsTarget - g.savingsSaved, g.savingsMonthly)) : "Set a target"
   const emergencyTarget = summary.totalSpending * g.emergencyMonths
   const emergencyProgress = emergencyTarget > 0 ? g.emergencySaved / emergencyTarget : 0
-  const emergencyEta = etaLabel(monthsTo(emergencyTarget - g.emergencySaved, g.emergencyMonthly))
+  const emergencyEta = emergencyTarget > 0 ? etaLabel(monthsTo(emergencyTarget - g.emergencySaved, g.emergencyMonthly)) : "Add spending to calculate"
 
   return (
     <div className="space-y-ds-lg" data-oid="4ee23bd0e6" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
