@@ -1,12 +1,14 @@
 import { useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Receipt, Trash2 } from "lucide-react"
 import { cn } from "@vibe/ui"
-import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt, monthlyOf, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
+import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt2, monthlyOf, fmt, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, Toggle } from "./fields"
 import { CountUp } from "./CountUp"
 import { getLastUsed } from "../../lib/prefs"
+import { useTransactions } from "../../hooks/useTransactions"
+import { categoryOf } from "../../lib/transactions"
 
 interface Props {
   state: BudgetState
@@ -23,6 +25,7 @@ const ROW_MOTION = {
 }
 
 export function SpendingBoard({ state, summary, actions }: Props) {
+  const txs = useTransactions(45)
   // Let the switch finish sliding before the row moves lists.
   const [flip, setFlip] = useState<Record<string, boolean>>({})
   const timers = useRef<Record<string, number>>({})
@@ -81,6 +84,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
 
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id && i.enabled)
+        const catTxs = (txs ?? []).filter((t) => categoryOf(t) === cat.id)
         return (
           <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md scroll-mb-[140px] border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
@@ -150,6 +154,29 @@ export function SpendingBoard({ state, summary, actions }: Props) {
             </ul>
 
             {items.length === 0 ? <p className="px-ds-md py-ds-md font-body text-body text-muted-foreground" data-oid="a66aa635e2" data-oid-shared="true">No active costs here.</p> : null}
+
+            {catTxs.length > 0 ? (
+              <div className="border-t-2 border-dashed border-foreground">
+                <div className="flex items-center gap-ds-xs px-ds-md pt-ds-sm">
+                  <Receipt className="size-4 text-muted-foreground" strokeWidth={2.5} />
+                  <p className="font-caption text-caption uppercase text-muted-foreground">Recent purchases</p>
+                </div>
+                <ul className="divide-y-2 divide-foreground/10">
+                  {catTxs.slice(0, 8).map((t) => (
+                    <li key={t.transaction_id} className="flex items-center justify-between gap-ds-sm px-ds-md py-ds-sm">
+                      <div className="min-w-0">
+                        <p className="truncate font-body text-[14px]">{t.merchant_name || t.name || "Unknown merchant"}</p>
+                        <p className="font-caption text-caption text-muted-foreground">
+                          {new Date(`${t.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          {t.pending ? " · Pending" : ""}
+                        </p>
+                      </div>
+                      <p className="shrink-0 font-label text-[14px] font-bold">{fmt2(Number(t.amount))}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <button
               type="button"
