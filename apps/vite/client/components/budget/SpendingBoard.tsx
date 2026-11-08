@@ -1,6 +1,6 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Plus, Receipt, Trash2 } from "lucide-react"
+import { Landmark, Plus, Receipt, Trash2 } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt2, monthlyOf, fmt, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
@@ -8,7 +8,8 @@ import { NumberInput, Toggle } from "./fields"
 import { CountUp } from "./CountUp"
 import { getLastUsed } from "../../lib/prefs"
 import { useTransactions } from "../../hooks/useTransactions"
-import { categoryOf } from "../../lib/transactions"
+import { BANK_UPDATED_EVENT, categoryOf } from "../../lib/transactions"
+import { readSavedAccounts, type BankAccount } from "../../lib/plaid"
 
 interface Props {
   state: BudgetState
@@ -26,6 +27,17 @@ const ROW_MOTION = {
 
 export function SpendingBoard({ state, summary, actions }: Props) {
   const txs = useTransactions(45)
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  useEffect(() => {
+    const load = () => void readSavedAccounts().then(setAccounts)
+    load()
+    window.addEventListener(BANK_UPDATED_EVENT, load)
+    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
+  }, [])
+  const [accountFilter, setAccountFilter] = useState<string | null>(null)
+  const [expandedTxn, setExpandedTxn] = useState<string | null>(null)
+  const accountById = new Map(accounts.map((a) => [a.account_id, a]))
+
   // Let the switch finish sliding before the row moves lists.
   const [flip, setFlip] = useState<Record<string, boolean>>({})
   const timers = useRef<Record<string, number>>({})
@@ -82,9 +94,38 @@ export function SpendingBoard({ state, summary, actions }: Props) {
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-background" />
       </div>
 
+      {accounts.length > 1 ? (
+        <div className="relative -mx-ds-md">
+          <nav aria-label="Filter purchases by account" className="flex gap-ds-sm overflow-x-auto px-ds-md pb-ds-xs">
+            <button
+              type="button"
+              aria-pressed={accountFilter === null}
+              onClick={() => setAccountFilter(null)}
+              className="shrink-0 rounded-full border-2 border-foreground bg-muted px-ds-md py-ds-xs font-label text-[12px] font-bold uppercase tracking-[0.06em] text-muted-foreground aria-pressed:bg-foreground aria-pressed:text-background"
+            >
+              All accounts
+            </button>
+            {accounts.map((a) => (
+              <button
+                key={a.account_id}
+                type="button"
+                aria-pressed={accountFilter === a.account_id}
+                onClick={() => setAccountFilter(a.account_id)}
+                className="flex shrink-0 items-center gap-1 rounded-full border-2 border-foreground bg-muted px-ds-md py-ds-xs font-label text-[12px] font-bold uppercase tracking-[0.06em] text-muted-foreground aria-pressed:bg-foreground aria-pressed:text-background"
+              >
+                <Landmark className="size-3.5" strokeWidth={2.5} />
+                {a.institution ? `${a.institution} · ${a.name}` : a.name}
+                {a.mask ? ` ···${a.mask}` : ""}
+              </button>
+            ))}
+          </nav>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-background" />
+        </div>
+      ) : null}
+
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id && i.enabled)
-        const catTxs = (txs ?? []).filter((t) => categoryOf(t) === cat.id)
+        const catTxs = (txs ?? []).filter((t) => categoryOf(t) === cat.id && (!accountFilter || t.account_id === accountFilter))
         return (
           <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md scroll-mb-[140px] border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
@@ -162,18 +203,46 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                   <p className="font-caption text-caption uppercase text-muted-foreground">Recent purchases</p>
                 </div>
                 <ul className="divide-y-2 divide-foreground/10">
-                  {catTxs.slice(0, 8).map((t) => (
-                    <li key={t.transaction_id} className="flex items-center justify-between gap-ds-sm px-ds-md py-ds-sm">
-                      <div className="min-w-0">
-                        <p className="truncate font-body text-[14px]">{t.merchant_name || t.name || "Unknown merchant"}</p>
-                        <p className="font-caption text-caption text-muted-foreground">
-                          {new Date(`${t.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                          {t.pending ? " · Pending" : ""}
-                        </p>
-                      </div>
-                      <p className="shrink-0 font-label text-[14px] font-bold">{fmt2(Number(t.amount))}</p>
-                    </li>
-                  ))}
+                  {catTxs.slice(0, 8).map((t) => {
+                    const account = accountById.get(t.account_id)
+                    const open = expandedTxn === t.transaction_id
+                    return (
+                      <li key={t.transaction_id}>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTxn(open ? null : t.transaction_id)}
+                          aria-expanded={open}
+                          className="flex w-full items-center justify-between gap-ds-sm px-ds-md py-ds-sm text-left"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-body text-[14px]">{t.merchant_name || t.name || "Unknown merchant"}</p>
+                            <p className="font-caption text-caption text-muted-foreground">
+                              {new Date(`${t.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                              {t.pending ? " · Pending" : ""}
+                            </p>
+                          </div>
+                          <p className="shrink-0 font-label text-[14px] font-bold">{fmt2(Number(t.amount))}</p>
+                        </button>
+                        {open ? (
+                          <div className="space-y-ds-xs border-t-2 border-dashed border-foreground/30 px-ds-md py-ds-sm">
+                            <div className="flex items-center gap-ds-xs font-caption text-caption text-muted-foreground">
+                              <Landmark className="size-3.5" strokeWidth={2.5} />
+                              {account ? (account.institution ? `${account.institution} · ${account.name}` : account.name) : "Account unavailable"}
+                              {account?.mask ? ` ···${account.mask}` : ""}
+                            </div>
+                            {t.name && t.merchant_name && t.name !== t.merchant_name ? (
+                              <p className="font-caption text-caption text-muted-foreground">Bank description: {t.name}</p>
+                            ) : null}
+                            {t.pfc_detailed ? (
+                              <p className="font-caption text-caption text-muted-foreground">
+                                Category: {t.pfc_detailed.replaceAll("_", " ").toLowerCase()}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             ) : null}
