@@ -207,16 +207,31 @@ export interface Summary {
   savingsRate: number
 }
 
-export function summarize(state: BudgetState, scenario?: WhatIf): Summary {
+/**
+ * `actual`, when given, is this month's real spend per category from the
+ * connected bank (see actualByCategory in lib/transactions.ts) — pass it once
+ * any bank account is connected, even if some/all categories are $0 so far
+ * this month, so Spend reflects real transactions instead of the manual
+ * plan. Omit it entirely (not an empty object) for users with no bank
+ * connected, who still budget from manually entered items.
+ */
+export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partial<Record<CategoryId, number>>): Summary {
   const income = estimateIncome(state.income)
   let takeHome = state.income.overrideEnabled ? Math.max(0, state.income.overrideMonthly) : income.estimatedNetMonthly
   if (scenario) takeHome *= 1 + scenario.incomeChange / 100
 
   const byCategory: Record<CategoryId, number> = { fixed: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 }
-  for (const item of state.items) {
-    if (!item.enabled) continue
-    const cut = scenario ? (scenario.cuts[item.category] ?? 0) / 100 : 0
-    byCategory[item.category] += monthlyOf(item) * (1 - cut)
+  if (actual) {
+    for (const c of CATEGORIES) {
+      const cut = scenario ? (scenario.cuts[c.id] ?? 0) / 100 : 0
+      byCategory[c.id] = (actual[c.id] ?? 0) * (1 - cut)
+    }
+  } else {
+    for (const item of state.items) {
+      if (!item.enabled) continue
+      const cut = scenario ? (scenario.cuts[item.category] ?? 0) / 100 : 0
+      byCategory[item.category] += monthlyOf(item) * (1 - cut)
+    }
   }
   const totalSpending = Object.values(byCategory).reduce((a, b) => a + b, 0)
   const savings = Math.max(0, state.goals.savingsMonthly)

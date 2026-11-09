@@ -1,5 +1,5 @@
 import { supabase } from "./supabase"
-import type { CategoryId } from "./budget"
+import { emptyCuts, type CategoryId } from "./budget"
 
 /** A bank transaction synced by the plaid Edge Function. Positive amount = money out. */
 export interface Txn {
@@ -42,6 +42,18 @@ export function categoryOf(t: Pick<Txn, "pfc_primary" | "pfc_detailed">): Catego
 }
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+
+/** Real spend per category for one calendar month, from actual bank transactions. */
+export function actualByCategory(txs: Txn[], month: string): Record<CategoryId, number> {
+  const out = emptyCuts()
+  for (const t of txs) {
+    const amt = Number(t.amount)
+    if (!(amt > 0) || t.date.slice(0, 7) !== month) continue
+    const cat = categoryOf(t)
+    if (cat) out[cat] += amt
+  }
+  return out
+}
 
 /** Transactions on or after `since` (YYYY-MM-DD). Empty when signed out or not synced yet. */
 export async function readTransactions(since: string): Promise<Txn[]> {

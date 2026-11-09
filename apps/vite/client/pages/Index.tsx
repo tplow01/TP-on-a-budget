@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useBudget } from "../hooks/useBudget"
 import { useAuth } from "../hooks/useAuth"
 import { supabase } from "../lib/supabase"
@@ -7,8 +7,10 @@ import { AuthScreen } from "../components/budget/AuthScreen"
 import { MfaChallenge } from "../components/budget/MfaChallenge"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
 import { isScenarioActive, summarize } from "../lib/budget"
-import { isOAuthReturn } from "../lib/plaid"
+import { isOAuthReturn, readSavedAccounts } from "../lib/plaid"
 import { useBankLive } from "../hooks/useBankLive"
+import { useTransactions } from "../hooks/useTransactions"
+import { actualByCategory, monthKey, BANK_UPDATED_EVENT } from "../lib/transactions"
 import { BoardHeader } from "../components/budget/BoardHeader"
 import { BoardOverview } from "../components/budget/BoardOverview"
 import { GoalsPanel } from "../components/budget/GoalsPanel"
@@ -27,8 +29,21 @@ export default function Index() {
   // Back from an OAuth bank login? Re-open the Profile sheet so Plaid Link can finish.
   const [profileOpen, setProfileOpen] = useState(isOAuthReturn)
   const email = auth.session?.user.email ?? null
-  const summary = useMemo(() => summarize(state), [state])
-  const scenario = useMemo(() => summarize(state, state.whatIf), [state])
+
+  // Once any bank is connected, Spend comes from real transactions this
+  // calendar month instead of the manual plan — see summarize()'s `actual` param.
+  const [hasBank, setHasBank] = useState(false)
+  useEffect(() => {
+    const load = () => void readSavedAccounts().then((a) => setHasBank(a.length > 0))
+    load()
+    window.addEventListener(BANK_UPDATED_EVENT, load)
+    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
+  }, [])
+  const txs = useTransactions(45)
+  const actual = useMemo(() => (hasBank ? actualByCategory(txs ?? [], monthKey(new Date())) : undefined), [hasBank, txs])
+
+  const summary = useMemo(() => summarize(state, undefined, actual), [state, actual])
+  const scenario = useMemo(() => summarize(state, state.whatIf, actual), [state, actual])
   const scenarioActive = isScenarioActive(state.whatIf)
 
   const TITLES: Record<TabId, string> = { board: "Overview", income: "Income", spend: "Spending", goals: "Goals", whatif: "What if" }
