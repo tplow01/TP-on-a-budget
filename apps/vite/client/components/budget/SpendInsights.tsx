@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Landmark, Minus, TrendingDown, TrendingUp } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { CATEGORIES, emptyCuts, fmt, type CategoryId, type Summary } from "../../lib/budget"
-import { BANK_UPDATED_EVENT, categoryOf, monthKey, readTransactions, type Txn } from "../../lib/transactions"
+import { BANK_UPDATED_EVENT, categoryOf, monthKey, readCategoryOverrides, readTransactions, type CategoryOverrides, type Txn } from "../../lib/transactions"
 import { CountUp } from "./CountUp"
 
 interface Props {
@@ -30,12 +30,14 @@ function Sparkline({ values }: { values: number[] }) {
 
 export function SpendInsights({ summary, hasAccounts, onOpenProfile }: Props) {
   const [txs, setTxs] = useState<Txn[] | null>(null)
+  const [overrides, setOverrides] = useState<CategoryOverrides>({})
 
   useEffect(() => {
     const load = () => {
       const now = new Date()
       const since = new Date(now.getFullYear(), now.getMonth() - 5, 1)
       void readTransactions(`${monthKey(since)}-01`).then(setTxs)
+      void readCategoryOverrides().then(setOverrides)
     }
     load()
     window.addEventListener(BANK_UPDATED_EVENT, load)
@@ -52,7 +54,7 @@ export function SpendInsights({ summary, hasAccounts, onOpenProfile }: Props) {
     for (const t of txs ?? []) {
       const amt = Number(t.amount)
       if (!(amt > 0)) continue
-      const cat = categoryOf(t)
+      const cat = categoryOf(t, overrides)
       if (!cat) continue
       const key = t.date.slice(0, 7)
       if (byMonth[key]) byMonth[key][cat] += amt
@@ -67,7 +69,7 @@ export function SpendInsights({ summary, hasAccounts, onOpenProfile }: Props) {
       pace: day / daysInMonth,
       monthName: now.toLocaleString(undefined, { month: "long" }),
     }
-  }, [txs])
+  }, [txs, overrides])
 
   const totalActual = Object.values(data.current).reduce((a, b) => a + b, 0)
   const overList = CATEGORIES.filter((c) => data.current[c.id] - summary.byCategory[c.id] > 0.5)

@@ -18,7 +18,7 @@ export type Frequency = "weekly" | "fortnightly" | "monthly" | "quarterly" | "ye
 /** How often your paycheck lands. Semimonthly = the 15th and the last day of the month. */
 export type PayFrequency = "weekly" | "fortnightly" | "semimonthly" | "monthly"
 
-export type CategoryId = "fixed" | "variable" | "food" | "lifestyle" | "health" | "buffer"
+export type CategoryId = "fixed" | "variable" | "food" | "lifestyle" | "health" | "transfers" | "buffer"
 
 export interface BudgetItem {
   id: string
@@ -116,6 +116,7 @@ export const CATEGORIES: CategoryMeta[] = [
   { id: "food", name: "Food", tagline: "Groceries, lunches, takeaway", band: "bg-accent", bandText: "text-accent-foreground" },
   { id: "lifestyle", name: "Lifestyle", tagline: "Going out, transport, subscriptions, trips", band: "bg-[hsl(325.9_63.3%_52%)]", bandText: "text-primary-foreground" },
   { id: "health", name: "Health & wellness", tagline: "Gym, dental, prescriptions", band: "bg-success", bandText: "text-success-foreground" },
+  { id: "transfers", name: "Venmo & Zelle", tagline: "Peer-to-peer sends — recategorise once you know what they were for", band: "bg-[hsl(199_60%_45%)]", bandText: "text-primary-foreground" },
   { id: "buffer", name: "Buffer", tagline: "A cushion for the unexpected", band: "bg-warning", bandText: "text-warning-foreground" },
 ]
 
@@ -221,7 +222,7 @@ export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partia
   let takeHome = state.income.overrideEnabled ? Math.max(0, state.income.overrideMonthly) : income.estimatedNetMonthly
   if (scenario) takeHome *= 1 + scenario.incomeChange / 100
 
-  const byCategory: Record<CategoryId, number> = { fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 }
+  const byCategory: Record<CategoryId, number> = { fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, transfers: 0, buffer: 0 }
   if (actual) {
     for (const c of CATEGORIES) {
       const cut = scenario ? (scenario.cuts[c.id] ?? 0) / 100 : 0
@@ -253,7 +254,7 @@ export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partia
 
 export const isScenarioActive = (w: WhatIf) => w.incomeChange !== 0 || Object.values(w.cuts).some((c) => c > 0)
 
-export const emptyCuts = (): Record<CategoryId, number> => ({ fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 })
+export const emptyCuts = (): Record<CategoryId, number> => ({ fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, transfers: 0, buffer: 0 })
 
 /** Months until `remaining` is covered at `monthly`. 0 = done, null = never. */
 export function monthsTo(remaining: number, monthly: number): number | null {

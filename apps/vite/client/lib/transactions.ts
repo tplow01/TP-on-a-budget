@@ -52,15 +52,41 @@ export function peerApp(t: Pick<Txn, "name" | "merchant_name">): string | null {
   return PEER_APPS.find((app) => hay.includes(app)) ?? null
 }
 
-export function categoryOf(t: Pick<Txn, "pfc_primary" | "pfc_detailed" | "name" | "merchant_name">): CategoryId | null {
+/** Per-transaction category the user picked by hand, overriding the automatic
+ * guess below — keyed by transaction_id. */
+export type CategoryOverrides = Record<string, CategoryId>
+
+export function categoryOf(t: Pick<Txn, "transaction_id" | "pfc_primary" | "pfc_detailed" | "name" | "merchant_name">, overrides?: CategoryOverrides): CategoryId | null {
+  if (overrides?.[t.transaction_id]) return overrides[t.transaction_id]
   // Paying off a card isn't new spending — the card purchases already count.
   if (t.pfc_detailed === "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT") return null
   if (t.pfc_detailed && t.pfc_detailed in DETAIL_MAP) return DETAIL_MAP[t.pfc_detailed]
   const p = t.pfc_primary ?? "OTHER"
   // Sending someone money via Venmo/Zelle etc. is real spending even though
-  // Plaid calls it a transfer — we just don't know what it was for.
-  if (p === "TRANSFER_OUT" && peerApp(t)) return "buffer"
+  // Plaid calls it a transfer — we just don't know what it was for until the
+  // user tells us, so it starts in its own category rather than "buffer".
+  if (p === "TRANSFER_OUT" && peerApp(t)) return "transfers"
   return p in PRIMARY_MAP ? PRIMARY_MAP[p] : "buffer"
+}
+
+/** Read this user's saved category overrides, keyed by transaction_id. */
+export async function readCategoryOverrides(): Promise<CategoryOverrides> {
+  if (!supabase) return {}
+  const { data, error } = await supabase.from("transaction_categories").select("transaction_id, category")
+  if (error) return {}
+  return Object.fromEntries((data ?? []).map((r) => [r.transaction_id, r.category as CategoryId]))
+}
+
+/** Save (or clear, with category null) the user's manual category for one transaction. */
+export async function setCategoryOverride(transactionId: string, category: CategoryId | null): Promise<void> {
+  if (!supabase) return
+  if (category === null) {
+    await supabase.from("transaction_categories").delete().eq("transaction_id", transactionId)
+    return
+  }
+  const { data: auth } = await supabase.auth.getUser()
+  if (!auth.user) return
+  await supabase.from("transaction_categories").upsert({ transaction_id: transactionId, user_id: auth.user.id, category }, { onConflict: "transaction_id" })
 }
 
 export interface IncomeEntry {
@@ -100,12 +126,12 @@ export function incomeTxns(txs: Txn[], month: string): IncomeEntry[] {
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
 
 /** Real spend per category for one calendar month, from actual bank transactions. */
-export function actualByCategory(txs: Txn[], month: string): Record<CategoryId, number> {
+export function actualByCategory(txs: Txn[], month: string, overrides?: CategoryOverrides): Record<CategoryId, number> {
   const out = emptyCuts()
   for (const t of txs) {
     const amt = Number(t.amount)
     if (!(amt > 0) || t.date.slice(0, 7) !== month) continue
-    const cat = categoryOf(t)
+    const cat = categoryOf(t, overrides)
     if (cat) out[cat] += amt
   }
   return out

@@ -10,7 +10,7 @@ import { isScenarioActive, summarize } from "../lib/budget"
 import { isOAuthReturn, readSavedAccounts } from "../lib/plaid"
 import { useBankLive } from "../hooks/useBankLive"
 import { useTransactions } from "../hooks/useTransactions"
-import { actualByCategory, monthKey, BANK_UPDATED_EVENT } from "../lib/transactions"
+import { actualByCategory, monthKey, readCategoryOverrides, BANK_UPDATED_EVENT, type CategoryOverrides } from "../lib/transactions"
 import { BoardHeader } from "../components/budget/BoardHeader"
 import { BoardOverview } from "../components/budget/BoardOverview"
 import { GoalsPanel } from "../components/budget/GoalsPanel"
@@ -40,7 +40,14 @@ export default function Index() {
     return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
   }, [])
   const txs = useTransactions(45)
-  const actual = useMemo(() => (hasBank ? actualByCategory(txs ?? [], monthKey(new Date())) : undefined), [hasBank, txs])
+  const [overrides, setOverrides] = useState<CategoryOverrides>({})
+  useEffect(() => {
+    const load = () => void readCategoryOverrides().then(setOverrides)
+    load()
+    window.addEventListener(BANK_UPDATED_EVENT, load)
+    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
+  }, [])
+  const actual = useMemo(() => (hasBank ? actualByCategory(txs ?? [], monthKey(new Date()), overrides) : undefined), [hasBank, txs, overrides])
 
   const summary = useMemo(() => summarize(state, undefined, actual), [state, actual])
   const scenario = useMemo(() => summarize(state, state.whatIf, actual), [state, actual])

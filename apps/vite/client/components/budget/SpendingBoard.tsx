@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Landmark, Plus, Receipt, Trash2 } from "lucide-react"
 import { cn } from "@vibe/ui"
-import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt2, monthlyOf, fmt, type BudgetState, type Frequency, type Summary } from "../../lib/budget"
+import { CATEGORIES, FREQUENCIES, FREQUENCY_LABEL, categoryById, fmt2, monthlyOf, fmt, type BudgetState, type CategoryId, type Frequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, Toggle } from "./fields"
 import { CountUp } from "./CountUp"
 import { getLastUsed } from "../../lib/prefs"
 import { useTransactions } from "../../hooks/useTransactions"
-import { BANK_UPDATED_EVENT, categoryOf } from "../../lib/transactions"
+import { BANK_UPDATED_EVENT, categoryOf, readCategoryOverrides, setCategoryOverride, type CategoryOverrides } from "../../lib/transactions"
 import { readSavedAccounts, type BankAccount } from "../../lib/plaid"
 
 interface Props {
@@ -36,6 +36,16 @@ export function SpendingBoard({ state, summary, actions }: Props) {
   }, [])
   const [accountFilter, setAccountFilter] = useState<string | null>(null)
   const [expandedTxn, setExpandedTxn] = useState<string | null>(null)
+  const [overrides, setOverrides] = useState<CategoryOverrides>({})
+  useEffect(() => {
+    const load = () => void readCategoryOverrides().then(setOverrides)
+    load()
+    window.addEventListener(BANK_UPDATED_EVENT, load)
+    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
+  }, [])
+  const recategorise = (transactionId: string, category: CategoryId) => {
+    void setCategoryOverride(transactionId, category).then(() => window.dispatchEvent(new Event(BANK_UPDATED_EVENT)))
+  }
   const accountById = new Map(accounts.map((a) => [a.account_id, a]))
 
   // Let the switch finish sliding before the row moves lists.
@@ -125,7 +135,7 @@ export function SpendingBoard({ state, summary, actions }: Props) {
 
       {CATEGORIES.map((cat) => {
         const items = state.items.filter((i) => i.category === cat.id && i.enabled)
-        const catTxs = (txs ?? []).filter((t) => categoryOf(t) === cat.id && (!accountFilter || t.account_id === accountFilter))
+        const catTxs = (txs ?? []).filter((t) => categoryOf(t, overrides) === cat.id && (!accountFilter || t.account_id === accountFilter))
         return (
           <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-ds-md scroll-mb-[140px] border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="b7f978ab0c" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-text-editable="false" data-oid-text-source="element:div|element:ul|expression:791c219612c4|element:button">
             <div className={cn("border-b-4 border-foreground px-ds-md py-ds-sm", cat.band, cat.bandText)} data-oid="b85fd2e939" data-oid-shared="true" data-oid-instance-targetable="true" data-oid-classname-dynamic="true">
@@ -235,9 +245,23 @@ export function SpendingBoard({ state, summary, actions }: Props) {
                             ) : null}
                             {t.pfc_detailed ? (
                               <p className="font-caption text-caption text-muted-foreground">
-                                Category: {t.pfc_detailed.replaceAll("_", " ").toLowerCase()}
+                                Bank category: {t.pfc_detailed.replaceAll("_", " ").toLowerCase()}
                               </p>
                             ) : null}
+                            <label className="ds-field">
+                              <span className="ds-field-label uppercase">Move to</span>
+                              <select
+                                value={cat.id}
+                                onChange={(e) => recategorise(t.transaction_id, e.target.value as CategoryId)}
+                                className="min-h-[48px] w-full rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[15px]"
+                              >
+                                {CATEGORIES.map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
                           </div>
                         ) : null}
                       </li>
