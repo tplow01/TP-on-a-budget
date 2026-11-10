@@ -18,7 +18,7 @@ export type Frequency = "weekly" | "fortnightly" | "monthly" | "quarterly" | "ye
 /** How often your paycheck lands. Semimonthly = the 15th and the last day of the month. */
 export type PayFrequency = "weekly" | "fortnightly" | "semimonthly" | "monthly"
 
-export type CategoryId = "fixed" | "food" | "lifestyle" | "health" | "buffer"
+export type CategoryId = "fixed" | "variable" | "food" | "lifestyle" | "health" | "buffer"
 
 export interface BudgetItem {
   id: string
@@ -111,7 +111,8 @@ export interface CategoryMeta {
 }
 
 export const CATEGORIES: CategoryMeta[] = [
-  { id: "fixed", name: "Fixed bills", tagline: "Rent, utilities, insurance", band: "bg-secondary", bandText: "text-secondary-foreground" },
+  { id: "fixed", name: "Fixed bills", tagline: "Rent, insurance — same amount every time", band: "bg-secondary", bandText: "text-secondary-foreground" },
+  { id: "variable", name: "Variable bills", tagline: "PG&E, water, wifi, phone — amount changes", band: "bg-[hsl(262_55%_55%)]", bandText: "text-primary-foreground" },
   { id: "food", name: "Food", tagline: "Groceries, lunches, takeaway", band: "bg-accent", bandText: "text-accent-foreground" },
   { id: "lifestyle", name: "Lifestyle", tagline: "Going out, transport, subscriptions, trips", band: "bg-[hsl(325.9_63.3%_52%)]", bandText: "text-primary-foreground" },
   { id: "health", name: "Health & wellness", tagline: "Gym, dental, prescriptions", band: "bg-success", bandText: "text-success-foreground" },
@@ -220,7 +221,7 @@ export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partia
   let takeHome = state.income.overrideEnabled ? Math.max(0, state.income.overrideMonthly) : income.estimatedNetMonthly
   if (scenario) takeHome *= 1 + scenario.incomeChange / 100
 
-  const byCategory: Record<CategoryId, number> = { fixed: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 }
+  const byCategory: Record<CategoryId, number> = { fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 }
   if (actual) {
     for (const c of CATEGORIES) {
       const cut = scenario ? (scenario.cuts[c.id] ?? 0) / 100 : 0
@@ -252,7 +253,7 @@ export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partia
 
 export const isScenarioActive = (w: WhatIf) => w.incomeChange !== 0 || Object.values(w.cuts).some((c) => c > 0)
 
-export const emptyCuts = (): Record<CategoryId, number> => ({ fixed: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 })
+export const emptyCuts = (): Record<CategoryId, number> => ({ fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 })
 
 /** Months until `remaining` is covered at `monthly`. 0 = done, null = never. */
 export function monthsTo(remaining: number, monthly: number): number | null {
@@ -485,9 +486,9 @@ export function createSampleState(): BudgetState {
     },
     items: [
       item("fixed", "Rent", 1800, "monthly"),
-      item("fixed", "Utilities", 140, "monthly"),
-      item("fixed", "Internet", 60, "monthly"),
-      item("fixed", "Phone bill", 45, "monthly", false),
+      item("variable", "Utilities", 140, "monthly"),
+      item("variable", "Internet", 60, "monthly"),
+      item("variable", "Phone bill", 45, "monthly", false),
       item("fixed", "Car insurance", 1200, "yearly"),
       item("food", "Groceries", 110, "weekly"),
       item("food", "Work lunches", 40, "weekly"),

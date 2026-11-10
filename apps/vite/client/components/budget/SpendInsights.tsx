@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Landmark, Minus, TrendingDown, TrendingUp } from "lucide-react"
 import { cn } from "@vibe/ui"
-import { CATEGORIES, fmt, type CategoryId, type Summary } from "../../lib/budget"
+import { CATEGORIES, emptyCuts, fmt, type CategoryId, type Summary } from "../../lib/budget"
 import { BANK_UPDATED_EVENT, categoryOf, monthKey, readTransactions, type Txn } from "../../lib/transactions"
 import { CountUp } from "./CountUp"
 
@@ -11,7 +11,7 @@ interface Props {
   onOpenProfile: () => void
 }
 
-const zero = (): Record<CategoryId, number> => ({ fixed: 0, food: 0, lifestyle: 0, health: 0, buffer: 0 })
+const zero = emptyCuts
 
 /** 6-month trend for one category; the last point is this month so far. */
 function Sparkline({ values }: { values: number[] }) {

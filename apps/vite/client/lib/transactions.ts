@@ -19,7 +19,7 @@ const PRIMARY_MAP: Record<string, CategoryId | null> = {
   INCOME: null,
   TRANSFER_IN: null,
   TRANSFER_OUT: null,
-  RENT_AND_UTILITIES: "fixed",
+  RENT_AND_UTILITIES: "variable", // overridden to "fixed" for rent/mortgage itself, see DETAIL_MAP
   LOAN_PAYMENTS: "fixed",
   BANK_FEES: "fixed",
   GOVERNMENT_AND_NON_PROFIT: "fixed",
@@ -34,9 +34,18 @@ const PRIMARY_MAP: Record<string, CategoryId | null> = {
   HOME_IMPROVEMENT: "lifestyle",
 }
 
+/** Only rent/mortgage itself is a fixed amount every time — PG&E, water, wifi,
+ * phone etc. are billed under the same Plaid primary category but the amount
+ * changes month to month, so they belong in "variable" instead. */
+const DETAIL_MAP: Record<string, CategoryId> = {
+  RENT_AND_UTILITIES_RENT: "fixed",
+  RENT_AND_UTILITIES_MORTGAGE: "fixed",
+}
+
 export function categoryOf(t: Pick<Txn, "pfc_primary" | "pfc_detailed">): CategoryId | null {
   // Paying off a card isn't new spending — the card purchases already count.
   if (t.pfc_detailed === "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT") return null
+  if (t.pfc_detailed && t.pfc_detailed in DETAIL_MAP) return DETAIL_MAP[t.pfc_detailed]
   const p = t.pfc_primary ?? "OTHER"
   return p in PRIMARY_MAP ? PRIMARY_MAP[p] : "buffer"
 }
