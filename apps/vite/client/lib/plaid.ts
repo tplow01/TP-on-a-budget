@@ -94,6 +94,13 @@ export function clearOAuthParams() {
   window.history.replaceState(null, "", window.location.pathname + window.location.hash)
 }
 
-/** Cash across checking + savings — what "My money" is set to. */
+/** Cash across checking + savings — what "My money" is set to. Uses the available
+ * balance (excludes pending holds) so it matches what the bank's own app shows;
+ * falls back to current when a bank doesn't report available. */
 export const cashTotal = (accounts: BankAccount[]) =>
-  Math.round(accounts.filter((a) => a.type === "depository").reduce((s, a) => s + (a.current ?? 0), 0) * 100) / 100
+  Math.round(accounts.filter((a) => a.type === "depository").reduce((s, a) => s + (a.available ?? a.current ?? 0), 0) * 100) / 100
+
+/** Balance to show for one account: available (excludes pending holds) for
+ * checking/savings, since that's what matches the bank's own app; current
+ * (amount owed) for credit/loan, where "available" means available credit. */
+export const displayBalance = (a: BankAccount) => (a.type === "depository" ? (a.available ?? a.current) : a.current)

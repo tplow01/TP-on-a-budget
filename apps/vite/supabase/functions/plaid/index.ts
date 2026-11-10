@@ -103,6 +103,13 @@ async function syncTransactions(userId: string, itemId: string, accessToken: str
     } catch (e) {
       // Plaid asks us to restart pagination if data changed mid-sync.
       if (attempt === 0 && (e as { code?: string }).code === "TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION") continue
+      await admin.from("sync_errors").insert({
+        user_id: userId,
+        item_id: itemId,
+        action: "syncTransactions",
+        message: e instanceof Error ? e.message : String(e),
+        code: (e as { code?: string }).code ?? null,
+      }).then(() => undefined, () => undefined)
       throw e
     }
   }

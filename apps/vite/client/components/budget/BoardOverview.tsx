@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { CalendarClock, CircleHelp, Landmark } from "lucide-react"
 import { cn } from "@vibe/ui"
-import { readSavedAccounts, type BankAccount } from "../../lib/plaid"
+import { displayBalance, readSavedAccounts, type BankAccount } from "../../lib/plaid"
 import { BANK_UPDATED_EVENT, findPayment } from "../../lib/transactions"
 import { useTransactions } from "../../hooks/useTransactions"
 import { PayCycleCard } from "./PayCycleCard"
@@ -170,7 +170,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
                   </p>
                 </div>
                 <p data-credit={a.type === "credit" || a.type === "loan"} className="shrink-0 font-caption text-[15px] font-bold data-[credit=true]:text-primary" data-oid="223b777ae8" data-oid-shared="true" data-oid-instance-targetable="true">
-                  {a.current == null ? "—" : fmt2(a.type === "credit" || a.type === "loan" ? -a.current : a.current)}
+                  {displayBalance(a) == null ? "—" : fmt2(a.type === "credit" || a.type === "loan" ? -displayBalance(a)! : displayBalance(a)!)}
                 </p>
               </li>
             ))}

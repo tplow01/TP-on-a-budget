@@ -17,6 +17,7 @@ import {
   clearLinkToken,
   clearOAuthParams,
   createLinkToken,
+  displayBalance,
   isOAuthReturn,
   loadLinkToken,
   saveLinkToken,
@@ -165,7 +166,7 @@ export function BankSection({ onTotal, mfaReady }: { onTotal: (total: number) =>
                           {a.mask ? ` ···${a.mask}` : ""}
                         </p>
                       </div>
-                      <p className="shrink-0 font-caption text-[15px] font-bold" data-oid="9adf72711e" data-oid-shared="true">{a.current == null ? "—" : fmt2(a.current)}</p>
+                      <p className="shrink-0 font-caption text-[15px] font-bold" data-oid="9adf72711e" data-oid-shared="true">{displayBalance(a) == null ? "—" : fmt2(displayBalance(a)!)}</p>
                     </li>
                   ))}
               </ul>
