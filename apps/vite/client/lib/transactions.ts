@@ -42,12 +42,59 @@ const DETAIL_MAP: Record<string, CategoryId> = {
   RENT_AND_UTILITIES_MORTGAGE: "fixed",
 }
 
-export function categoryOf(t: Pick<Txn, "pfc_primary" | "pfc_detailed">): CategoryId | null {
+/** Plaid files Zelle/Venmo/Cash App/PayPal payments under the generic
+ * TRANSFER_IN/TRANSFER_OUT categories it also uses for moving your own money
+ * between your own accounts — it can't tell the two apart. We can, roughly,
+ * by looking for the app's name in the description. */
+const PEER_APPS = ["venmo", "zelle", "cash app", "cashapp", "paypal"]
+export function peerApp(t: Pick<Txn, "name" | "merchant_name">): string | null {
+  const hay = `${t.merchant_name ?? ""} ${t.name ?? ""}`.toLowerCase()
+  return PEER_APPS.find((app) => hay.includes(app)) ?? null
+}
+
+export function categoryOf(t: Pick<Txn, "pfc_primary" | "pfc_detailed" | "name" | "merchant_name">): CategoryId | null {
   // Paying off a card isn't new spending — the card purchases already count.
   if (t.pfc_detailed === "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT") return null
   if (t.pfc_detailed && t.pfc_detailed in DETAIL_MAP) return DETAIL_MAP[t.pfc_detailed]
   const p = t.pfc_primary ?? "OTHER"
+  // Sending someone money via Venmo/Zelle etc. is real spending even though
+  // Plaid calls it a transfer — we just don't know what it was for.
+  if (p === "TRANSFER_OUT" && peerApp(t)) return "buffer"
   return p in PRIMARY_MAP ? PRIMARY_MAP[p] : "buffer"
+}
+
+export interface IncomeEntry {
+  transaction_id: string
+  date: string
+  source: string
+  amount: number
+}
+
+/** Money coming in that's actually yours to spend: paychecks (Plaid INCOME)
+ * and peer payments received via Zelle/Venmo/etc. Excludes plain transfers
+ * between your own linked accounts, which Plaid also reports as inflows. */
+export function isIncome(t: Pick<Txn, "amount" | "pfc_primary" | "name" | "merchant_name">): boolean {
+  if (!(Number(t.amount) < 0)) return false
+  if (t.pfc_primary === "INCOME") return true
+  return Boolean(peerApp(t))
+}
+
+const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
+
+/** Who paid you — the merchant/employer name, or the P2P app when that's all Plaid gives us. */
+function incomeSource(t: Pick<Txn, "name" | "merchant_name">): string {
+  const named = t.merchant_name ?? t.name
+  if (named) return named
+  const app = peerApp(t)
+  return app ? titleCase(app) : "Deposit"
+}
+
+/** Real income transactions in one calendar month, newest first. */
+export function incomeTxns(txs: Txn[], month: string): IncomeEntry[] {
+  return txs
+    .filter((t) => t.date.slice(0, 7) === month && isIncome(t))
+    .map((t) => ({ transaction_id: t.transaction_id, date: t.date, source: incomeSource(t), amount: -Number(t.amount) }))
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
 }
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`

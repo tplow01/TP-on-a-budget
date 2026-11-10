@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
-import { CalendarClock, CircleHelp, Landmark } from "lucide-react"
+import { CalendarClock, CircleHelp, Landmark, Wallet } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { displayBalance, readSavedAccounts, type BankAccount } from "../../lib/plaid"
-import { BANK_UPDATED_EVENT, findPayment } from "../../lib/transactions"
+import { BANK_UPDATED_EVENT, findPayment, incomeTxns, monthKey } from "../../lib/transactions"
 import { useTransactions } from "../../hooks/useTransactions"
 import { PayCycleCard } from "./PayCycleCard"
 import { SpendInsights } from "./SpendInsights"
@@ -51,6 +51,8 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
   }, [])
 
   const txs = useTransactions(45)
+  const income = useMemo(() => incomeTxns(txs ?? [], monthKey(new Date())), [txs])
+  const incomeTotal = income.reduce((s, i) => s + i.amount, 0)
   const dueSoon = useMemo(() => {
     const today = new Date()
     return state.items
@@ -106,6 +108,32 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
           </ul>
         </div>
       </section>
+
+      {/* Real income, from the bank */}
+      {income.length > 0 ? (
+        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="a1c5f2b001">
+          <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-success px-ds-md py-ds-sm text-success-foreground" data-oid="a1c5f2b002">
+            <div className="flex items-center gap-ds-sm" data-oid="a1c5f2b003">
+              <Wallet className="size-5" strokeWidth={2.5} data-oid="a1c5f2b004" />
+              <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="a1c5f2b005">Money in this month</h2>
+            </div>
+            <p className="font-caption text-[15px] font-bold" data-oid="a1c5f2b006">+{fmt2(incomeTotal)}</p>
+          </div>
+          <ul className="divide-y-2 divide-foreground/15" data-oid="a1c5f2b007">
+            {income.map((i, index) => (
+              <li key={i.transaction_id} data-index={index} className="flex min-h-[48px] items-center gap-ds-sm px-ds-md py-ds-sm" data-oid="a1c5f2b008" data-oid-shared="true" data-oid-instance-targetable="true">
+                <div className="min-w-0 flex-1" data-oid="a1c5f2b009" data-oid-shared="true" data-oid-instance-targetable="true">
+                  <p className="truncate font-body text-[15px]" data-oid="a1c5f2b010" data-oid-shared="true" data-oid-instance-targetable="true">{i.source}</p>
+                  <p className="font-caption text-caption text-muted-foreground" data-oid="a1c5f2b011" data-oid-shared="true" data-oid-instance-targetable="true">
+                    {new Date(`${i.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <p className="shrink-0 font-caption text-[15px] font-bold text-success" data-oid="a1c5f2b012" data-oid-shared="true" data-oid-instance-targetable="true">+{fmt2(i.amount)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* Due soon */}
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="6c8326eb6f" data-oid-text-editable="false" data-oid-text-source="element:div|expression:dc56f37b33e4">
