@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   createDefaultState,
-  emptyCuts,
   makeId,
   type BudgetItem,
   type BudgetState,
@@ -11,7 +10,7 @@ import {
 } from "../lib/budget"
 import { clearLocalBudget, readLocalBudget, writeLocalBudget, type BudgetStore } from "../lib/storage"
 import { getLastUsed, rememberUsed } from "../lib/prefs"
-import { success, tap } from "../lib/haptics"
+import { tap } from "../lib/haptics"
 
 /** local = no cloud store · loading = first fetch · saving/synced = cloud ok · offline/error = cloud failed */
 export type SyncStatus = "local" | "loading" | "saving" | "synced" | "offline" | "error"
@@ -151,24 +150,6 @@ export function useBudget(store: BudgetStore | null) {
       },
       updateGoals: (patch: Partial<Goals>) => update((s) => touch({ ...s, goals: { ...s.goals, ...patch } })),
       setTotalBalance: (value: number) => update((s) => touch({ ...s, totalBalance: value })),
-      setCut: (category: CategoryId, value: number) =>
-        update((s) => touch({ ...s, whatIf: { ...s.whatIf, cuts: { ...s.whatIf.cuts, [category]: value } } })),
-      setIncomeChange: (value: number) => update((s) => touch({ ...s, whatIf: { ...s.whatIf, incomeChange: value } })),
-      resetWhatIf: () => update((s) => touch({ ...s, whatIf: { cuts: emptyCuts(), incomeChange: 0 } })),
-      /** Bake the category cuts into real item amounts, then clear the scenario. */
-      applyWhatIf: () => {
-        success()
-        update((s) =>
-          touch({
-            ...s,
-            items: s.items.map((i) => {
-              const cut = s.whatIf.cuts[i.category] ?? 0
-              return cut > 0 ? { ...i, amount: Math.round(i.amount * (1 - cut / 100) * 100) / 100 } : i
-            }),
-            whatIf: { cuts: emptyCuts(), incomeChange: 0 },
-          }),
-        )
-      },
       /** Resets to the sample budget everywhere (the reset syncs to other devices). */
       resetAll: () => {
         clearLocalBudget()

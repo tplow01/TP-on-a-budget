@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
-import { CalendarClock, CircleHelp, Landmark, Wallet } from "lucide-react"
+import { CalendarClock, Landmark, Wallet } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { displayBalance, readSavedAccounts, type BankAccount } from "../../lib/plaid"
 import { BANK_UPDATED_EVENT, findPayment, incomeTxns, monthKey } from "../../lib/transactions"
 import { useTransactions } from "../../hooks/useTransactions"
+import { DailySpend } from "./DailySpend"
 import { PayCycleCard } from "./PayCycleCard"
 import { SpendInsights } from "./SpendInsights"
 import {
@@ -27,12 +28,11 @@ import type { TabId } from "./TabBar"
 interface Props {
   state: BudgetState
   summary: Summary
-  scenario: Summary | null
   onNavigate: (t: TabId) => void
   onOpenProfile: () => void
 }
 
-export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProfile }: Props) {
+export function BoardOverview({ state, summary, onNavigate, onOpenProfile }: Props) {
   const segments = [
     ...CATEGORIES.map((c) => ({ key: c.id, label: c.name, value: summary.byCategory[c.id], band: c.band })),
     { key: "savings", label: state.goals.savingsName || "Savings goal", value: summary.savings, band: SAVINGS_BAND },
@@ -69,18 +69,7 @@ export function BoardOverview({ state, summary, scenario, onNavigate, onOpenProf
 
   return (
     <div className="space-y-ds-lg" data-oid="19e527facb" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true" data-oid-text-editable="false">
-      {scenario ? (
-        <button
-          type="button"
-          onClick={() => onNavigate("whatif")}
-          className="flex w-full items-center gap-ds-sm border-4 border-foreground bg-accent p-ds-md text-left text-accent-foreground shadow-[4px_4px_0_0_var(--foreground)]" data-oid="e79f580d5b"
-        >
-          <CircleHelp className="size-8 shrink-0" strokeWidth={2.5} data-oid="79366ebbfe" />
-          <span className="font-body text-body" data-oid="89e4a3d22e">
-            Scenario active: you'd have <strong className="font-label font-extrabold" data-oid="80665a0766">{fmt(scenario.leftover)}</strong> left over instead.
-          </span>
-        </button>
-      ) : null}
+      <DailySpend />
 
       {/* Where the money goes */}
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="69a667d17b">

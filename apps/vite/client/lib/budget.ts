@@ -61,19 +61,11 @@ export interface Goals {
   emergencyMonthly: number
 }
 
-export interface WhatIf {
-  /** % cut per category, 0–100. */
-  cuts: Record<CategoryId, number>
-  /** % change to take-home pay, e.g. -10 or +5. */
-  incomeChange: number
-}
-
 export interface BudgetState {
   version: 1
   income: IncomeSettings
   items: BudgetItem[]
   goals: Goals
-  whatIf: WhatIf
   /** Total money across all accounts — shown as "My money". */
   totalBalance: number
   updatedAt: string
@@ -217,22 +209,17 @@ export interface Summary {
  * plan. Omit it entirely (not an empty object) for users with no bank
  * connected, who still budget from manually entered items.
  */
-export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partial<Record<CategoryId, number>>): Summary {
+export function summarize(state: BudgetState, actual?: Partial<Record<CategoryId, number>>): Summary {
   const income = estimateIncome(state.income)
-  let takeHome = state.income.overrideEnabled ? Math.max(0, state.income.overrideMonthly) : income.estimatedNetMonthly
-  if (scenario) takeHome *= 1 + scenario.incomeChange / 100
+  const takeHome = state.income.overrideEnabled ? Math.max(0, state.income.overrideMonthly) : income.estimatedNetMonthly
 
   const byCategory: Record<CategoryId, number> = { fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, transfers: 0, buffer: 0 }
   if (actual) {
-    for (const c of CATEGORIES) {
-      const cut = scenario ? (scenario.cuts[c.id] ?? 0) / 100 : 0
-      byCategory[c.id] = (actual[c.id] ?? 0) * (1 - cut)
-    }
+    for (const c of CATEGORIES) byCategory[c.id] = actual[c.id] ?? 0
   } else {
     for (const item of state.items) {
       if (!item.enabled) continue
-      const cut = scenario ? (scenario.cuts[item.category] ?? 0) / 100 : 0
-      byCategory[item.category] += monthlyOf(item) * (1 - cut)
+      byCategory[item.category] += monthlyOf(item)
     }
   }
   const totalSpending = Object.values(byCategory).reduce((a, b) => a + b, 0)
@@ -251,8 +238,6 @@ export function summarize(state: BudgetState, scenario?: WhatIf, actual?: Partia
     savingsRate: takeHome > 0 ? totalSaving / takeHome : 0,
   }
 }
-
-export const isScenarioActive = (w: WhatIf) => w.incomeChange !== 0 || Object.values(w.cuts).some((c) => c > 0)
 
 export const emptyCuts = (): Record<CategoryId, number> => ({ fixed: 0, variable: 0, food: 0, lifestyle: 0, health: 0, transfers: 0, buffer: 0 })
 
@@ -464,7 +449,6 @@ export function createDefaultState(): BudgetState {
       emergencySaved: 0,
       emergencyMonthly: 0,
     },
-    whatIf: { cuts: emptyCuts(), incomeChange: 0 },
     totalBalance: 0,
     updatedAt: new Date().toISOString(),
   }
@@ -514,7 +498,6 @@ export function createSampleState(): BudgetState {
       emergencySaved: 4000,
       emergencyMonthly: 250,
     },
-    whatIf: { cuts: emptyCuts(), incomeChange: 0 },
     totalBalance: 12500,
     updatedAt: new Date().toISOString(),
   }
@@ -531,10 +514,6 @@ export function normalizeState(raw: unknown): BudgetState {
     version: 1,
     income: { ...def.income, ...(r.income ?? {}) },
     goals: { ...def.goals, ...(r.goals ?? {}) },
-    whatIf: {
-      incomeChange: r.whatIf?.incomeChange ?? 0,
-      cuts: { ...emptyCuts(), ...(r.whatIf?.cuts ?? {}) },
-    },
     items: Array.isArray(r.items) ? r.items : def.items,
     totalBalance: typeof r.totalBalance === "number" && Number.isFinite(r.totalBalance) ? r.totalBalance : def.totalBalance,
   }

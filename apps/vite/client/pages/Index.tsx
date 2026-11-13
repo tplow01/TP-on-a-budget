@@ -6,7 +6,7 @@ import { clearLocalBudget, createSupabaseStore } from "../lib/storage"
 import { AuthScreen } from "../components/budget/AuthScreen"
 import { MfaChallenge } from "../components/budget/MfaChallenge"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
-import { isScenarioActive, summarize } from "../lib/budget"
+import { summarize } from "../lib/budget"
 import { isOAuthReturn, readSavedAccounts } from "../lib/plaid"
 import { useBankLive } from "../hooks/useBankLive"
 import { useTransactions } from "../hooks/useTransactions"
@@ -17,7 +17,6 @@ import { GoalsPanel } from "../components/budget/GoalsPanel"
 import { IncomePanel } from "../components/budget/IncomePanel"
 import { SpendingBoard } from "../components/budget/SpendingBoard"
 import { TabBar, type TabId } from "../components/budget/TabBar"
-import { WhatIfPanel } from "../components/budget/WhatIfPanel"
 
 export default function Index() {
   const auth = useAuth()
@@ -49,11 +48,9 @@ export default function Index() {
   }, [])
   const actual = useMemo(() => (hasBank ? actualByCategory(txs ?? [], monthKey(new Date()), overrides) : undefined), [hasBank, txs, overrides])
 
-  const summary = useMemo(() => summarize(state, undefined, actual), [state, actual])
-  const scenario = useMemo(() => summarize(state, state.whatIf, actual), [state, actual])
-  const scenarioActive = isScenarioActive(state.whatIf)
+  const summary = useMemo(() => summarize(state, actual), [state, actual])
 
-  const TITLES: Record<TabId, string> = { board: "Overview", income: "Income", spend: "Spending", goals: "Goals", whatif: "What if" }
+  const TITLES: Record<TabId, string> = { board: "Overview", income: "Income", spend: "Spending", goals: "Goals" }
 
   const go = (t: TabId) => {
     setTab(t)
@@ -98,12 +95,11 @@ export default function Index() {
       <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background/70 sm:border-x-4 sm:border-foreground" data-oid="521d31b0ed">
         <BoardHeader key={tab === "board" ? "full" : "compact"} summary={summary} balance={state.totalBalance} onBalanceChange={actions.setTotalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={tab === "board" ? undefined : TITLES[tab]} />
         <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "board"} data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:11ce88c87ab1|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
-          {tab === "board" ? <BoardOverview state={state} summary={summary} scenario={scenarioActive ? scenario : null} onNavigate={go} onOpenProfile={() => setProfileOpen(true)} /> : null}
+          {tab === "board" ? <BoardOverview state={state} summary={summary} onNavigate={go} onOpenProfile={() => setProfileOpen(true)} /> : null}
 
           {tab === "income" ? <IncomePanel state={state} summary={summary} actions={actions} /> : null}
           {tab === "spend" ? <SpendingBoard state={state} summary={summary} actions={actions} /> : null}
           {tab === "goals" ? <GoalsPanel state={state} summary={summary} actions={actions} /> : null}
-          {tab === "whatif" ? <WhatIfPanel state={state} summary={summary} scenario={scenario} actions={actions} /> : null}
         </div>
         <TabBar tab={tab} onChange={go} />
         <ProfileSheet

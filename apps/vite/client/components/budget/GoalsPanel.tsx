@@ -1,7 +1,10 @@
-import { ShieldCheck, Target } from "lucide-react"
+import { useMemo } from "react"
+import { Gauge, ShieldCheck, Target } from "lucide-react"
 import { EMERGENCY_BAND, SAVINGS_BAND, etaLabel, fmt, monthsTo, pct, type BudgetState, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, ProgressBar } from "./fields"
+import { useTransactions } from "../../hooks/useTransactions"
+import { monthPace } from "../../lib/transactions"
 
 interface Props {
   state: BudgetState
@@ -19,6 +22,15 @@ export function GoalsPanel({ state, summary, actions }: Props) {
   const emergencyProgress = emergencyTarget > 0 ? g.emergencySaved / emergencyTarget : 0
   const emergencyEta = emergencyTarget > 0 ? etaLabel(monthsTo(emergencyTarget - g.emergencySaved, g.emergencyMonthly)) : "Add spending to calculate"
 
+  // "At this rate" — real income/spend so far this month, projected to month's
+  // end, so goal timelines can be checked against actual behavior instead of
+  // only the manual monthly-contribution figures above.
+  const txs = useTransactions(45)
+  const pace = useMemo(() => (txs ? monthPace(txs) : null), [txs])
+  const realLeftover = pace ? pace.projectedLeftover : null
+  const savingsRealEta = realLeftover !== null && realLeftover > 0 && g.savingsTarget > 0 ? etaLabel(monthsTo(g.savingsTarget - g.savingsSaved, realLeftover)) : null
+  const emergencyRealEta = realLeftover !== null && realLeftover > 0 && emergencyTarget > 0 ? etaLabel(monthsTo(emergencyTarget - g.emergencySaved, realLeftover)) : null
+
   return (
     <div className="space-y-ds-lg" data-oid="4ee23bd0e6" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
       <section className="border-b-4 border-foreground pb-ds-sm" data-oid="1bdde0bf6b">
@@ -27,6 +39,35 @@ export function GoalsPanel({ state, summary, actions }: Props) {
           {fmt(summary.totalSaving)}/mo set aside — {pct(summary.savingsRate)} of take-home. Paid first, before the leftover.
         </p>
       </section>
+
+      {/* At this rate — real pace, not the plan */}
+      {pace && (pace.incomeSoFar > 0 || pace.spendSoFar > 0) ? (
+        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="a1b2c3d001">
+          <div className="flex items-center gap-ds-sm border-b-4 border-foreground bg-[hsl(199_60%_45%)] px-ds-md py-ds-sm text-primary-foreground" data-oid="a1b2c3d002">
+            <Gauge className="size-5" strokeWidth={2.5} data-oid="a1b2c3d003" />
+            <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="a1b2c3d004">At this rate</h3>
+          </div>
+          <div className="space-y-ds-sm p-ds-md" data-oid="a1b2c3d005">
+            <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="a1b2c3d006">
+              Projected from real spending so far this month, extrapolated at today's pace.
+            </p>
+            <div className="grid grid-cols-3 gap-ds-sm" data-oid="a1b2c3d007">
+              <div data-oid="a1b2c3d008">
+                <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="a1b2c3d009">Income</p>
+                <p className="font-label text-[16px] font-extrabold" data-oid="a1b2c3d010">{fmt(pace.projectedIncome)}</p>
+              </div>
+              <div data-oid="a1b2c3d011">
+                <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="a1b2c3d012">Spend</p>
+                <p className="font-label text-[16px] font-extrabold" data-oid="a1b2c3d013">{fmt(pace.projectedSpend)}</p>
+              </div>
+              <div data-oid="a1b2c3d014">
+                <p className="font-caption text-caption uppercase text-muted-foreground" data-oid="a1b2c3d015">Leftover</p>
+                <p data-short={pace.projectedLeftover < 0} className="font-label text-[16px] font-extrabold data-[short=true]:text-primary" data-oid="a1b2c3d016">{fmt(pace.projectedLeftover)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* Savings goal */}
       <section className="border-4 border-foreground bg-card shadow-[6px_6px_0_0_var(--foreground)]" data-oid="e3f9a755a3">
@@ -63,6 +104,9 @@ export function GoalsPanel({ state, summary, actions }: Props) {
             <p className="font-label text-label font-bold uppercase" data-oid="e081d83b96" data-oid-text-editable="false" data-oid-text-source="expression:13a1453ad9ff|text">{pct(Math.min(1, savingsProgress))} there</p>
             <p className="font-caption text-caption text-muted-foreground" data-oid="8c5c4b08d2">{savingsEta}</p>
           </div>
+          {savingsRealEta ? (
+            <p className="font-caption text-caption text-muted-foreground" data-oid="a1b2c3d017">At your real pace: {savingsRealEta}</p>
+          ) : null}
         </div>
       </section>
 
@@ -112,6 +156,9 @@ export function GoalsPanel({ state, summary, actions }: Props) {
             <p className="font-label text-label font-bold uppercase" data-oid="06ab1c6f91" data-oid-text-editable="false" data-oid-text-source="expression:4d5efa5460c2|text">{pct(Math.min(1, emergencyProgress))} covered</p>
             <p className="font-caption text-caption text-muted-foreground" data-oid="f6cae8c48e">{emergencyEta}</p>
           </div>
+          {emergencyRealEta ? (
+            <p className="font-caption text-caption text-muted-foreground" data-oid="a1b2c3d018">At your real pace: {emergencyRealEta}</p>
+          ) : null}
         </div>
       </section>
     </div>

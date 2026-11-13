@@ -137,6 +137,30 @@ export function actualByCategory(txs: Txn[], month: string, overrides?: Category
   return out
 }
 
+export interface MonthPace {
+  /** Real income and spend so far this month. */
+  incomeSoFar: number
+  spendSoFar: number
+  /** Both extrapolated to a full month at today's daily rate. */
+  projectedIncome: number
+  projectedSpend: number
+  projectedLeftover: number
+}
+
+/** "At this rate" — this month's real income/spend so far, extrapolated to a
+ * full month at the same daily pace. Pass `now` only in tests. */
+export function monthPace(txs: Txn[], overrides?: CategoryOverrides, now = new Date()): MonthPace {
+  const month = monthKey(now)
+  const day = now.getDate()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const incomeSoFar = incomeTxns(txs, month).reduce((s, i) => s + i.amount, 0)
+  const spendSoFar = Object.values(actualByCategory(txs, month, overrides)).reduce((a, b) => a + b, 0)
+  const scale = daysInMonth / day
+  const projectedIncome = incomeSoFar * scale
+  const projectedSpend = spendSoFar * scale
+  return { incomeSoFar, spendSoFar, projectedIncome, projectedSpend, projectedLeftover: projectedIncome - projectedSpend }
+}
+
 /** Transactions on or after `since` (YYYY-MM-DD). Empty when signed out or not synced yet. */
 export async function readTransactions(since: string): Promise<Txn[]> {
   if (!supabase) return []

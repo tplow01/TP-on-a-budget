@@ -37,7 +37,7 @@ export function tap() {
   }
 }
 
-/** A double tap — bigger confirmations like applying a scenario. */
+/** A double tap — bigger confirmations. */
 export function success() {
   try {
     if (canVibrate()) navigator.vibrate([12, 50, 18])
