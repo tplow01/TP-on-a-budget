@@ -1,7 +1,10 @@
-import { CalendarDays, Info } from "lucide-react"
-import { PAYS_PER_YEAR, fmt, pct, type BudgetState, type PayFrequency, type Summary } from "../../lib/budget"
+import { useMemo } from "react"
+import { CalendarDays, Info, Wallet } from "lucide-react"
+import { PAYS_PER_YEAR, fmt, fmt2, pct, type BudgetState, type PayFrequency, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 import { NumberInput, Toggle } from "./fields"
+import { useTransactions } from "../../hooks/useTransactions"
+import { incomeTxns, monthKey } from "../../lib/transactions"
 
 interface Props {
   state: BudgetState
@@ -14,8 +17,38 @@ export function IncomePanel({ state, summary, actions }: Props) {
   const b = summary.income
   const diff = inc.overrideMonthly - b.estimatedNetMonthly
 
+  const txs = useTransactions(45)
+  const income = useMemo(() => incomeTxns(txs ?? [], monthKey(new Date())), [txs])
+  const incomeTotal = income.reduce((s, i) => s + i.amount, 0)
+
   return (
     <div className="space-y-ds-lg" data-oid="9b050a48a2" data-oid-component-root="true" data-oid-callsite-deletable="true" data-oid-callsite-single="true">
+      {/* Real income, from the bank */}
+      {income.length > 0 ? (
+        <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]" data-oid="e1e98239aa">
+          <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-success px-ds-md py-ds-sm text-success-foreground" data-oid="e1e98239ab2">
+            <div className="flex items-center gap-ds-sm" data-oid="e1e98239ab3">
+              <Wallet className="size-5" strokeWidth={2.5} data-oid="e1e98239ab4" />
+              <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]" data-oid="e1e98239ab5">Real income this month</h2>
+            </div>
+            <p className="font-caption text-[15px] font-bold" data-oid="e1e98239ab6">+{fmt2(incomeTotal)}</p>
+          </div>
+          <ul className="divide-y-2 divide-foreground/15" data-oid="e1e98239ab7">
+            {income.map((i, index) => (
+              <li key={i.transaction_id} data-index={index} className="flex min-h-[48px] items-center gap-ds-sm px-ds-md py-ds-sm" data-oid="e1e98239ab8" data-oid-shared="true" data-oid-instance-targetable="true">
+                <div className="min-w-0 flex-1" data-oid="e1e98239ab9" data-oid-shared="true" data-oid-instance-targetable="true">
+                  <p className="truncate font-body text-[15px]" data-oid="e1e98239ac0" data-oid-shared="true" data-oid-instance-targetable="true">{i.source}</p>
+                  <p className="font-caption text-caption text-muted-foreground" data-oid="e1e98239ac1" data-oid-shared="true" data-oid-instance-targetable="true">
+                    {new Date(`${i.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <p className="shrink-0 font-caption text-[15px] font-bold text-success" data-oid="e1e98239ac2" data-oid-shared="true" data-oid-instance-targetable="true">+{fmt2(i.amount)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {/* Salary */}
       <section className="border-4 border-foreground bg-card shadow-[6px_6px_0_0_var(--foreground)]" data-oid="2b3bf4c3f2">
         <div className="m-ds-sm border-2 border-foreground bg-[hsl(24.4_48.7%_36.7%)] px-ds-md py-ds-sm text-center text-primary-foreground" data-oid="e1e98239ab">
