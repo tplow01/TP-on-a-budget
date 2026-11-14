@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:client": "vite build",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "preview": "vite preview",
     "add:three-r18": "pnpm add three@^0.170.0 @react-three/fiber@^8.18.0 @react-three/drei@^9.122.0 && pnpm add -D @types/three@^0.170.0",
     "add:p5": "pnpm add p5 && pnpm add -D @types/p5"
@@ -37,6 +38,7 @@
     "@vitejs/plugin-react": "^4.3.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.6.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^2"
   }
 }

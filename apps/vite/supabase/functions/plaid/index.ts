@@ -61,6 +61,10 @@ async function syncItem(userId: string, itemId: string, accessToken: string, ins
   if (rows.length) {
     const { error } = await admin.from("bank_accounts").upsert(rows, { onConflict: "account_id" })
     if (error) throw error
+    const day = new Date().toISOString().slice(0, 10)
+    const snaps = rows.map((r) => ({ user_id: userId, account_id: r.account_id, day, current: r.current, available: r.available, type: r.type }))
+    const { error: snapError } = await admin.from("balance_snapshots").upsert(snaps, { onConflict: "account_id,day" })
+    if (snapError) throw snapError
   }
 }
 
@@ -224,6 +228,7 @@ Deno.serve(async (req) => {
           user: { client_user_id: userId },
           client_name: "My Budget",
           products: ["transactions"],
+          optional_products: ["investments"],
           country_codes: ["US"],
           language: "en",
           transactions: { days_requested: 180 },
