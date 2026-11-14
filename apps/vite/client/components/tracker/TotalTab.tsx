@@ -26,7 +26,7 @@ const BUCKETS: Array<{ id: Bucket; label: string }> = [
 ]
 
 export function TotalTab({ data, onOpenProfile }: Props) {
-  const { txs, overrides, accounts, manual, snapshots } = data
+  const { txs, overrides, accounts, manual, snapshots, loaded } = data
   const [open, setOpen] = useState<BankAccount | ManualAccount | null>(null)
   const now = new Date()
   const month = monthKey(now)
@@ -50,6 +50,14 @@ export function TotalTab({ data, onOpenProfile }: Props) {
   const bankRows = (b: Bucket) => accounts.filter((a) => bucketOf(a.type) === b)
   const manualRows = (b: Bucket) => manual.filter((m) => bucketOf(manualType(m)) === b)
 
+  const loadingNotice = (
+    <div className="rounded-md border-2 border-dashed border-foreground p-ds-md">
+      <p className="font-caption text-caption text-muted-foreground">Loading…</p>
+    </div>
+  )
+
+  if (empty && !loaded) return <div className="space-y-ds-md">{loadingNotice}</div>
+
   if (empty) {
     return (
       <div className="space-y-ds-md">
@@ -61,12 +69,6 @@ export function TotalTab({ data, onOpenProfile }: Props) {
       </div>
     )
   }
-
-  const loadingNotice = (
-    <div className="rounded-md border-2 border-dashed border-foreground p-ds-md">
-      <p className="font-caption text-caption text-muted-foreground">Loading transactions…</p>
-    </div>
-  )
 
   return (
     <div className="space-y-ds-md">

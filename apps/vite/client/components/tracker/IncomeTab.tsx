@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ChevronDown } from "lucide-react"
 import type { BudgetActions } from "../../hooks/useBudget"
 import type { TrackerData } from "../../hooks/useTrackerData"
 import { fmt, fmt2, summarize, type BudgetState } from "../../lib/budget"
@@ -33,7 +34,7 @@ export function IncomeTab({ data, state }: Props) {
   const earned = sources.reduce((s, g) => s + g.total, 0)
   const cmp = sameDaysCompare(txs, now, (t) => (isIncome(t) ? -Number(t.amount) : 0))
   const pattern = incomePattern(txs, 90)
-  const last = sources.flatMap((g) => g.entries).sort((a, b) => (a.date < b.date ? 1 : -1))[0] ?? null
+  const last = sources.flatMap((g) => g.entries).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))[0] ?? null
   const showExpected = state.income.grossAnnual > 0 || state.income.overrideEnabled
   const takeHome = summarize(state).takeHome
 
@@ -76,7 +77,7 @@ export function IncomeTab({ data, state }: Props) {
                     type="button"
                     aria-expanded={expanded}
                     onClick={() => setOpenSource(expanded ? null : id)}
-                    className="flex min-h-[56px] w-full items-center justify-between gap-ds-sm px-ds-md py-ds-sm text-left active:bg-muted"
+                    className="group flex min-h-[56px] w-full items-center justify-between gap-ds-sm px-ds-md py-ds-sm text-left active:bg-muted"
                   >
                     <div className="flex min-w-0 items-center gap-ds-sm">
                       <span
@@ -87,7 +88,10 @@ export function IncomeTab({ data, state }: Props) {
                       </span>
                       <span className="truncate font-body text-body">{g.source}</span>
                     </div>
-                    <span className="shrink-0 font-caption text-[15px] font-bold text-success">{fmt(g.total)}</span>
+                    <span className="flex shrink-0 items-center gap-ds-xs font-caption text-[15px] font-bold text-success">
+                      {fmt(g.total)}
+                      <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-aria-expanded:rotate-180" strokeWidth={3} />
+                    </span>
                   </button>
                   {expanded ? (
                     <ul className="divide-y-2 divide-foreground/10 bg-muted">

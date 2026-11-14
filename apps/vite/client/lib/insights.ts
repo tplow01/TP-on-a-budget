@@ -1,11 +1,14 @@
 import type { CategoryId } from "./budget"
 import { categoryOf, incomeTxns, monthKey, peerApp, type CategoryOverrides, type IncomeEntry, type Txn } from "./transactions"
 
-const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
+// All-caps brand tokens of up to four letters (CVS, AT&T) stay upper-case; "&" joins letters.
+const BRAND_TOKEN = /^[A-Z]{1,4}(&[A-Z]{1,4})*$/
+const titleCase = (s: string) =>
+  s.replace(/\w\S*/g, (w) => (BRAND_TOKEN.test(w) ? w : w[0].toUpperCase() + w.slice(1).toLowerCase()))
 
 /** Stable merchant label: merchant_name ?? name, title-cased, store numbers stripped. */
 export function merchantKey(t: Pick<Txn, "merchant_name" | "name">): string {
-  const raw = (t.merchant_name ?? t.name ?? "").trim()
+  const raw = (t.merchant_name || t.name || "").trim()
   const cleaned = raw
     .replace(/\s*#\s*\d+.*$/, "")
     .replace(/\s+\d+$/, "")
@@ -19,25 +22,42 @@ export interface MerchantAgg {
   count: number
   category: CategoryId | null
   last: string
+  /** Most frequent raw merchant_name ?? name among this merchant's transactions, trimmed. */
+  displayName: string
+}
+
+const rawName = (t: Pick<Txn, "merchant_name" | "name">) => (t.merchant_name || t.name || "").trim()
+
+/** Tracks raw-name frequency per merchant and reports the most common one. */
+function pickDisplay(counts: Map<string, number>, fallback: string): string {
+  let best = ""
+  let n = 0
+  for (const [name, c] of counts) if (c > n && name) (best = name), (n = c)
+  return best || fallback
 }
 
 function aggregate(txs: Txn[], month: string, overrides?: CategoryOverrides): MerchantAgg[] {
   const map = new Map<string, MerchantAgg>()
+  const names = new Map<string, Map<string, number>>()
   for (const t of txs) {
     const amt = Number(t.amount)
     if (!(amt > 0) || t.date.slice(0, 7) !== month) continue
     const category = categoryOf(t, overrides)
     if (!category) continue
     const key = merchantKey(t)
+    const nm = names.get(key) ?? new Map<string, number>()
+    names.set(key, nm)
+    nm.set(rawName(t), (nm.get(rawName(t)) ?? 0) + 1)
     const cur = map.get(key)
     if (cur) {
       cur.total += amt
       cur.count += 1
       if (t.date > cur.last) cur.last = t.date
     } else {
-      map.set(key, { key, total: amt, count: 1, category, last: t.date })
+      map.set(key, { key, total: amt, count: 1, category, last: t.date, displayName: key })
     }
   }
+  for (const [key, agg] of map) agg.displayName = pickDisplay(names.get(key)!, key)
   return [...map.values()].sort((a, b) => b.total - a.total)
 }
 
@@ -52,6 +72,7 @@ export function spendByCategory(
 ): Array<{ category: CategoryId; total: number; merchants: MerchantAgg[] }> {
   // Aggregate per (category, merchant) so a merchant split across categories stays separate.
   const cats = new Map<CategoryId, Map<string, MerchantAgg>>()
+  const names = new Map<MerchantAgg, Map<string, number>>()
   for (const t of txs) {
     const amt = Number(t.amount)
     if (!(amt > 0) || t.date.slice(0, 7) !== month) continue
@@ -60,15 +81,22 @@ export function spendByCategory(
     const key = merchantKey(t)
     const m = cats.get(category) ?? new Map<string, MerchantAgg>()
     cats.set(category, m)
-    const cur = m.get(key)
+    let cur = m.get(key)
     if (cur) {
       cur.total += amt
       cur.count += 1
       if (t.date > cur.last) cur.last = t.date
-    } else m.set(key, { key, total: amt, count: 1, category, last: t.date })
+    } else {
+      cur = { key, total: amt, count: 1, category, last: t.date, displayName: key }
+      m.set(key, cur)
+    }
+    const nm = names.get(cur) ?? new Map<string, number>()
+    names.set(cur, nm)
+    nm.set(rawName(t), (nm.get(rawName(t)) ?? 0) + 1)
   }
   return [...cats.entries()]
     .map(([category, m]) => {
+      for (const agg of m.values()) agg.displayName = pickDisplay(names.get(agg)!, agg.key)
       const merchants = [...m.values()].sort((a, b) => b.total - a.total)
       return { category, total: merchants.reduce((s, x) => s + x.total, 0), merchants }
     })

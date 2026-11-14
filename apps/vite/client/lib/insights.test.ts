@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Txn } from "./transactions"
-import { incomeBySource, incomePattern, merchantKey, sameDaysCompare, spendByCategory } from "./insights"
+import { incomeBySource, incomePattern, merchantKey, sameDaysCompare, spendByCategory, spendByMerchant } from "./insights"
 
 let n = 0
 const tx = (o: Partial<Txn>): Txn => ({
@@ -20,6 +20,27 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 describe("merchantKey", () => {
   it("title-cases and strips store numbers", () => {
     expect(merchantKey({ merchant_name: null, name: "TRADER JOE'S #123" })).toBe("Trader Joe's")
+  })
+  it("falls back to name when merchant_name is an empty string", () => {
+    expect(merchantKey({ merchant_name: "", name: "Blue Bottle" })).toBe("Blue Bottle")
+  })
+  it("keeps short all-caps brand tokens upper-case", () => {
+    expect(merchantKey({ merchant_name: "CVS", name: null })).toBe("CVS")
+    expect(merchantKey({ merchant_name: null, name: "AT&T" })).toBe("AT&T")
+  })
+})
+
+describe("displayName", () => {
+  it("is the most frequent trimmed raw name for the merchant", () => {
+    const txs = [
+      tx({ pfc_primary: "FOOD_AND_DRINK", merchant_name: null, name: "CHIPOTLE 1234" }),
+      tx({ pfc_primary: "FOOD_AND_DRINK", merchant_name: " Chipotle ", name: "x" }),
+      tx({ pfc_primary: "FOOD_AND_DRINK", merchant_name: "Chipotle", name: "y" }),
+    ]
+    const m = spendByCategory(txs, "2028-03")[0].merchants[0]
+    expect(m.key).toBe("Chipotle")
+    expect(m.displayName).toBe("Chipotle")
+    expect(spendByMerchant(txs, "2028-03")[0].displayName).toBe("Chipotle")
   })
 })
 

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Trash2 } from "lucide-react"
 import { deleteAccount } from "../../lib/plaid"
 import { MfaSection } from "./MfaSection"
@@ -51,6 +51,18 @@ const SHEET = {
 }
 
 export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted, state, summary, actions }: Props) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (open) closeRef.current?.focus()
+  }, [open])
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [open, onClose])
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const removeAccount = async () => {
@@ -85,7 +97,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
             <div role="dialog" aria-modal="true" aria-label="Profile and settings" className="max-h-[85vh] overflow-y-auto border-x-4 border-t-4 border-foreground bg-background pb-[max(env(safe-area-inset-bottom),34px)]" data-oid="85bd91eed6">
               <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-card px-ds-md py-ds-md" data-oid="6e14817ef5">
                 <h2 className="font-heading text-heading font-extrabold uppercase" data-oid="bce7d771af">Profile</h2>
-                <button type="button" onClick={onClose} aria-label="Close" className="flex size-12 items-center justify-center rounded-md border-2 border-foreground bg-card active:scale-90" data-oid="df74edd5b3">
+                <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="flex size-12 items-center justify-center rounded-md border-2 border-foreground bg-card active:scale-90" data-oid="df74edd5b3">
                   <X className="size-5" strokeWidth={3} data-oid="9a7c5e5682" />
                 </button>
               </div>
