@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ChevronDown } from "lucide-react"
 import type { BudgetActions } from "../../hooks/useBudget"
 import type { TrackerData } from "../../hooks/useTrackerData"
 import { categoryById, fmt, fmt2, type BudgetState, type CategoryId } from "../../lib/budget"
@@ -68,7 +69,7 @@ export function SpendTab({ data }: Props) {
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]">
         <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground">
           <h2 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]">Spent · {monthName}</h2>
-          <span className="font-caption text-caption">{daysLeft} days left</span>
+          <span className="font-caption text-caption">{daysLeft} {daysLeft === 1 ? "day" : "days"} left</span>
         </div>
         <div className="space-y-ds-sm p-ds-md">
           <p className="font-display text-[44px] font-black leading-none">{fmt(compare.thisMonth)}</p>
@@ -86,7 +87,15 @@ export function SpendTab({ data }: Props) {
       <DailySpend txs={txs} overrides={overrides} />
 
       <section className="space-y-ds-md border-4 border-foreground bg-card p-ds-md shadow-[4px_4px_0_0_var(--foreground)]">
-        <LensTiles options={LENSES} value={lens} onChange={setLens} />
+        <LensTiles
+          options={LENSES}
+          value={lens}
+          onChange={(l) => {
+            setLens(l)
+            setOpenKey(null)
+            setOpenMerchant(null)
+          }}
+        />
 
         {lens === "category" ? (
           byCategory.length === 0 ? (
@@ -105,7 +114,7 @@ export function SpendTab({ data }: Props) {
                         setOpenKey(open ? null : c.category)
                         setOpenMerchant(null)
                       }}
-                      className="flex w-full items-center gap-ds-sm px-ds-xs py-ds-sm text-left"
+                      className="group flex w-full items-center gap-ds-sm px-ds-xs py-ds-sm text-left"
                     >
                       <span aria-hidden="true" className={`size-4 shrink-0 border-2 border-foreground ${meta.band}`} />
                       <div className="min-w-0 flex-1 space-y-1">
@@ -113,6 +122,7 @@ export function SpendTab({ data }: Props) {
                         <ProgressBar value={monthTotal > 0 ? c.total / monthTotal : 0} band={meta.band} />
                       </div>
                       <p className="shrink-0 font-caption text-[15px] font-bold">{fmt(c.total)}</p>
+                      <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-aria-expanded:rotate-180" strokeWidth={3} />
                     </button>
                     {open ? (
                       <ul className="border-l-4 border-foreground/20 pl-ds-sm">
@@ -125,10 +135,13 @@ export function SpendTab({ data }: Props) {
                                 type="button"
                                 aria-expanded={mOpen}
                                 onClick={() => setOpenMerchant(mOpen ? null : mk)}
-                                className="flex w-full items-center justify-between gap-ds-sm px-ds-xs py-ds-xs text-left"
+                                className="group flex w-full items-center justify-between gap-ds-sm px-ds-xs py-ds-xs text-left"
                               >
-                                <span className="min-w-0 truncate font-body text-[14px]">{m.key}</span>
-                                <span className="shrink-0 font-caption text-[14px] font-bold">{fmt2(m.total)}</span>
+                                <span className="min-w-0 truncate font-body text-[14px]">{m.displayName}</span>
+                                <span className="flex shrink-0 items-center gap-ds-xs font-caption text-[14px] font-bold">
+                                  {fmt2(m.total)}
+                                  <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-aria-expanded:rotate-180" strokeWidth={3} />
+                                </span>
                               </button>
                               {mOpen ? (
                                 <ul className="divide-y-2 divide-foreground/10">
@@ -162,15 +175,18 @@ export function SpendTab({ data }: Props) {
                       type="button"
                       aria-expanded={open}
                       onClick={() => setOpenKey(open ? null : m.key)}
-                      className="flex w-full items-center justify-between gap-ds-sm px-ds-xs py-ds-sm text-left"
+                      className="group flex w-full items-center justify-between gap-ds-sm px-ds-xs py-ds-sm text-left"
                     >
                       <div className="min-w-0">
-                        <p className="truncate font-label text-[14px] font-bold uppercase tracking-[0.04em]">{m.key}</p>
+                        <p className="truncate font-label text-[14px] font-bold uppercase tracking-[0.04em]">{m.displayName}</p>
                         <p className="font-caption text-caption text-muted-foreground">
                           {m.count}× · last {shortDate(m.last)}
                         </p>
                       </div>
-                      <p className="shrink-0 font-caption text-[15px] font-bold">{fmt(m.total)}</p>
+                      <p className="flex shrink-0 items-center gap-ds-xs font-caption text-[15px] font-bold">
+                        {fmt(m.total)}
+                        <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-aria-expanded:rotate-180" strokeWidth={3} />
+                      </p>
                     </button>
                     {open ? (
                       <ul className="divide-y-2 divide-foreground/10">

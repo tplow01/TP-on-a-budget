@@ -1,4 +1,5 @@
 import { motion } from "framer-motion"
+import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import type { BankAccount } from "../../lib/plaid"
 import type { ManualAccount, Snapshot } from "../../lib/networth"
@@ -22,6 +23,17 @@ const SHEET = {
 }
 
 export function AccountDetail({ account, txs, snapshots, onClose }: Props) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    closeRef.current?.focus()
+  }, [])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
   const isBank = "account_id" in account
   const id = isBank ? account.account_id : account.id
   const type = isBank ? account.type : account.type === "investment" ? "investment" : account.type === "credit" ? "credit" : "other"
@@ -39,7 +51,7 @@ export function AccountDetail({ account, txs, snapshots, onClose }: Props) {
         <div role="dialog" aria-modal="true" aria-label={account.name} className="max-h-[85vh] overflow-y-auto border-x-4 border-t-4 border-foreground bg-background pb-[max(env(safe-area-inset-bottom),34px)]">
           <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-card px-ds-md py-ds-md">
             <h2 className="min-w-0 truncate font-heading text-heading font-extrabold uppercase">{account.name}</h2>
-            <button type="button" onClick={onClose} aria-label="Close" className="flex size-12 shrink-0 items-center justify-center rounded-md border-2 border-foreground bg-card active:scale-90">
+            <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="flex size-12 shrink-0 items-center justify-center rounded-md border-2 border-foreground bg-card active:scale-90">
               <X className="size-5" strokeWidth={3} />
             </button>
           </div>

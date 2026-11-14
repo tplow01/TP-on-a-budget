@@ -76,4 +76,32 @@ describe("detectRecurring", () => {
     expect(r.recurring).toHaveLength(0)
     expect(r.oneOff).toHaveLength(2)
   })
+  const pair = (merchant: string, gap: number, a1 = 100, a2 = 100) => {
+    const d2 = new Date(Date.UTC(2026, 10, 9))
+    const d1 = new Date(d2.getTime() - gap * 86400000)
+    return [
+      tx({ ...food, merchant_name: merchant, amount: a1, date: d1.toISOString().slice(0, 10) }),
+      tx({ ...food, merchant_name: merchant, amount: a2, date: d2.toISOString().slice(0, 10) }),
+    ]
+  }
+  it.each([5, 9])("does not treat a %i-day gap as weekly", (gap) => {
+    expect(detectRecurring(pair("Gap", gap), undefined, NOW).recurring).toHaveLength(0)
+  })
+  it.each([24, 36])("does not treat a %i-day gap as monthly", (gap) => {
+    expect(detectRecurring(pair("Gap", gap), undefined, NOW).recurring).toHaveLength(0)
+  })
+  it("accepts amounts at exactly +/-15% of the mean", () => {
+    // mean 100, deviations exactly 15
+    expect(detectRecurring(pair("Edge", 30, 85, 115), undefined, NOW).recurring).toHaveLength(1)
+  })
+  it("excludes a recurring credit-card-payment merchant from both lists", () => {
+    const card = { pfc_primary: "LOAN_PAYMENTS", pfc_detailed: "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT" }
+    const txs = [
+      tx({ ...card, merchant_name: "Visa Payment", amount: 300, date: "2026-10-10" }),
+      tx({ ...card, merchant_name: "Visa Payment", amount: 300, date: "2026-11-09" }),
+    ]
+    const r = detectRecurring(txs, undefined, NOW)
+    expect(r.recurring).toHaveLength(0)
+    expect(r.oneOff).toHaveLength(0)
+  })
 })
