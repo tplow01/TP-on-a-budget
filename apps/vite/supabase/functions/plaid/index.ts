@@ -12,6 +12,9 @@ const PLAID_ENV = Deno.env.get("PLAID_ENV") ?? "sandbox"
 const PLAID_BASE = PLAID_ENV === "production" ? "https://production.plaid.com" : "https://sandbox.plaid.com"
 const PLAID_CLIENT_ID = Deno.env.get("PLAID_CLIENT_ID") ?? ""
 const PLAID_SECRET = Deno.env.get("PLAID_SECRET") ?? ""
+// Set PLAID_INVESTMENTS=1 once Plaid has approved the Investments product for this client;
+// requesting it before approval makes every link-token call fail.
+const PLAID_INVESTMENTS = Deno.env.get("PLAID_INVESTMENTS") === "1"
 const PLAID_REDIRECT_URI = Deno.env.get("PLAID_REDIRECT_URI") // optional, for OAuth banks
 // Plaid calls this when new transactions post. Defaults to this function's own URL.
 const WEBHOOK_URL = Deno.env.get("PLAID_WEBHOOK_URL") ?? `${Deno.env.get("SUPABASE_URL")}/functions/v1/plaid`
@@ -228,7 +231,7 @@ Deno.serve(async (req) => {
           user: { client_user_id: userId },
           client_name: "My Budget",
           products: ["transactions"],
-          optional_products: ["investments"],
+          ...(PLAID_INVESTMENTS ? { optional_products: ["investments"] } : {}),
           country_codes: ["US"],
           language: "en",
           transactions: { days_requested: 180 },
