@@ -31,7 +31,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
   const now = new Date()
   const month = monthKey(now)
 
-  const { total } = totalOf(accounts, manual)
+  const { total, byBucket } = totalOf(accounts, manual)
   const manualTotal = totalOf([], manual).total
   const series = daySeries(snapshots, manualTotal)
   const delta = monthDelta(series)
@@ -40,7 +40,8 @@ export function TotalTab({ data, onOpenProfile }: Props) {
   const inTotal = incomeTxns(list, month).reduce((s, i) => s + i.amount, 0)
   const outTotal = Object.values(actualByCategory(list, month, overrides)).reduce((a, b) => a + b, 0)
   const net = inTotal - outTotal
-  const projected = total + monthPace(list, overrides).projectedLeftover
+  const pace = monthPace(list, overrides)
+  const projected = total + (pace.projectedLeftover - (pace.incomeSoFar - pace.spendSoFar))
 
   const empty = accounts.length === 0 && manual.length === 0
 
@@ -102,7 +103,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
             const banks = bankRows(g.id)
             const manuals = manualRows(g.id)
             if (banks.length + manuals.length === 0) return null
-            const sum = totalOf(accounts, manual).byBucket[g.id]
+            const sum = byBucket[g.id]
             return (
               <div key={g.id} className="border-b-4 border-foreground last:border-b-0">
                 <div className="flex items-center justify-between gap-ds-sm bg-muted px-ds-md py-ds-xs">
@@ -146,7 +147,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
         <div className="space-y-ds-xs p-ds-md">
           <p className="font-label text-[13px] font-extrabold uppercase tracking-[0.06em]">Projected month-end total</p>
           <p className="font-display text-[36px] font-black leading-none">{fmt(projected)}</p>
-          <p className="font-caption text-caption text-muted-foreground">Extrapolates this month's income and spending so far. Early in the month this is noisy.</p>
+          <p className="font-caption text-caption text-muted-foreground">Today's total plus what the rest of {now.toLocaleDateString(undefined, { month: "long" })} is on track to add. Early in the month this is noisy.</p>
         </div>
       </section>
 

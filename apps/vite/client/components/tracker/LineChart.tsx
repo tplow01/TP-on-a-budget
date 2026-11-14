@@ -23,10 +23,12 @@ export function LineChart({ points, className }: Props) {
   const last = coords[coords.length - 1]
   return (
     <div className={className}>
+      <div className="relative">
       <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="h-20 w-full text-foreground" role="img" aria-label="Balance history">
         <polyline points={coords.map(([x, y]) => `${x},${y}`).join(" ")} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-        <circle cx={last[0]} cy={last[1]} r={4} fill="var(--primary)" />
       </svg>
+      <span aria-hidden="true" className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${(last[0] / W) * 100}%`, top: `${(last[1] / H) * 100}%` }} />
+      </div>
       <div className="flex justify-between">
         <span className="font-caption text-[10px] text-muted-foreground">{points[0].day}</span>
         <span className="font-caption text-[10px] text-muted-foreground">{points[points.length - 1].day}</span>
