@@ -4,9 +4,13 @@ import { Trash2 } from "lucide-react"
 import { deleteAccount } from "../../lib/plaid"
 import { MfaSection } from "./MfaSection"
 import { Link } from "react-router-dom"
-import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
+import { Cloud, CloudOff, Download, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
 import { BankSection } from "./BankSection"
+import { ManualAccountsSection } from "../tracker/ManualAccountsSection"
+import { TaxEstimateSection } from "../tracker/TaxEstimateSection"
+import { downloadCsv, type BudgetState, type Summary } from "../../lib/budget"
+import type { BudgetActions } from "../../hooks/useBudget"
 
 interface Props {
   open: boolean
@@ -25,6 +29,9 @@ interface Props {
   onMfaChanged: () => void
   /** Called after the account has been deleted on the server. */
   onDeleted: () => void
+  state: BudgetState
+  summary: Summary
+  actions: BudgetActions
 }
 
 const STATUS_TEXT: Record<SyncStatus, string> = {
@@ -43,7 +50,7 @@ const SHEET = {
   transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const },
 }
 
-export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted }: Props) {
+export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted, state, summary, actions }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const removeAccount = async () => {
@@ -112,6 +119,10 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
 
                 {configured && email ? <BankSection onTotal={onBankTotal} mfaReady={mfaVerified} /> : null}
 
+                {configured && email ? <ManualAccountsSection /> : null}
+
+                <TaxEstimateSection state={state} summary={summary} actions={actions} />
+
                 {/* Sync */}
                 <section className="border-4 border-foreground bg-card" data-oid="cc282666e5">
                   <div className="m-ds-xs flex items-center gap-ds-sm border-2 border-foreground bg-secondary px-ds-md py-ds-sm text-secondary-foreground" data-oid="627025c548" data-oid-text-editable="false" data-oid-text-source="expression:cda5f46d5107|element:h3">
@@ -140,6 +151,10 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                   </div>
                   <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228" data-oid-text-editable="false" data-oid-text-source="element:p|element:button|expression:2a6695e1b7c7">
                     <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Clear everything and start from a blank budget. If you're signed in, this applies on all your devices.</p>
+                    <button type="button" onClick={() => downloadCsv(state)} className="ds-button min-h-[56px] w-full border-2 border-foreground bg-card text-foreground">
+                      <Download className="size-5" strokeWidth={2.5} />
+                      Export CSV
+                    </button>
                     <button
                       type="button"
                       onClick={() => {

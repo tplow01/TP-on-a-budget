@@ -49,3 +49,9 @@ not look-and-feel — the UI itself should still be checked by hand once deploye
 
 None of these are bugs — they're the kind of rough edge that only becomes
 obviously annoying after a few weeks of real use.
+
+## 2026-11-13 update
+
+- Redundant transaction fetches resolved: `useTrackerData` now makes a single `useTransactions(90)` call shared by all tabs.
+- What-If, Goals and pay-cycle surfaces were removed in the tracker redesign (Total / Spend / Income tabs).
+- Month-view heat colour is unchanged and still open.

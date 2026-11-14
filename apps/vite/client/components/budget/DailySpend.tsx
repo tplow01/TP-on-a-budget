@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Receipt } from "lucide-react"
 import { cn } from "@vibe/ui"
 import { categoryById, fmt, fmt2, type CategoryId } from "../../lib/budget"
-import { BANK_UPDATED_EVENT, categoryOf, readCategoryOverrides, type CategoryOverrides, type Txn } from "../../lib/transactions"
-import { useTransactions } from "../../hooks/useTransactions"
+import { categoryOf, type CategoryOverrides, type Txn } from "../../lib/transactions"
 
 type View = "day" | "week" | "month"
 
@@ -28,15 +27,7 @@ function spendOn(txs: Txn[], date: Date, overrides: CategoryOverrides) {
   return { total, spends }
 }
 
-export function DailySpend() {
-  const txs = useTransactions(DAYS_FETCHED)
-  const [overrides, setOverrides] = useState<CategoryOverrides>({})
-  useEffect(() => {
-    const load = () => void readCategoryOverrides().then(setOverrides)
-    load()
-    window.addEventListener(BANK_UPDATED_EVENT, load)
-    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
-  }, [])
+export function DailySpend({ txs, overrides }: { txs: Txn[]; overrides: CategoryOverrides }) {
   const [view, setView] = useState<View>("day")
   const [anchor, setAnchor] = useState(() => startOfDay(new Date()))
 
@@ -60,14 +51,14 @@ export function DailySpend() {
     setView("day")
   }
 
-  const dayData = useMemo(() => spendOn(txs ?? [], anchor, overrides), [txs, anchor, overrides])
+  const dayData = useMemo(() => spendOn(txs, anchor, overrides), [txs, anchor, overrides])
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(anchor)
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(start)
       d.setDate(d.getDate() + i)
-      return { date: d, ...spendOn(txs ?? [], d, overrides) }
+      return { date: d, ...spendOn(txs, d, overrides) }
     })
   }, [txs, anchor, overrides])
   const weekTotal = weekDays.reduce((s, d) => s + d.total, 0)
@@ -79,7 +70,7 @@ export function DailySpend() {
     return Array.from({ length: 42 }, (_, i) => {
       const d = new Date(gridStart)
       d.setDate(d.getDate() + i)
-      const { total } = spendOn(txs ?? [], d, overrides)
+      const { total } = spendOn(txs, d, overrides)
       return { date: d, total, inMonth: d.getMonth() === anchor.getMonth() }
     })
   }, [txs, anchor, overrides])
