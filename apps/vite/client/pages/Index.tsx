@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useBudget } from "../hooks/useBudget"
 import { useAuth } from "../hooks/useAuth"
 import { supabase } from "../lib/supabase"
@@ -7,16 +7,18 @@ import { AuthScreen } from "../components/budget/AuthScreen"
 import { MfaChallenge } from "../components/budget/MfaChallenge"
 import { ProfileSheet } from "../components/budget/ProfileSheet"
 import { summarize } from "../lib/budget"
-import { isOAuthReturn, readSavedAccounts } from "../lib/plaid"
+import { isOAuthReturn } from "../lib/plaid"
+import { UserRound } from "lucide-react"
 import { useBankLive } from "../hooks/useBankLive"
-import { useTransactions } from "../hooks/useTransactions"
-import { actualByCategory, monthKey, readCategoryOverrides, BANK_UPDATED_EVENT, type CategoryOverrides } from "../lib/transactions"
+import { useTrackerData } from "../hooks/useTrackerData"
+import { actualByCategory, monthKey } from "../lib/transactions"
 import { BoardHeader } from "../components/budget/BoardHeader"
-import { BoardOverview } from "../components/budget/BoardOverview"
-import { GoalsPanel } from "../components/budget/GoalsPanel"
-import { IncomePanel } from "../components/budget/IncomePanel"
-import { SpendingBoard } from "../components/budget/SpendingBoard"
 import { TabBar, type TabId } from "../components/budget/TabBar"
+import { TotalTab } from "../components/tracker/TotalTab"
+import { SpendTab } from "../components/tracker/SpendTab"
+import { IncomeTab } from "../components/tracker/IncomeTab"
+
+const TITLES: Record<TabId, string> = { total: "My total", spend: "Spending", income: "Income" }
 
 export default function Index() {
   const auth = useAuth()
@@ -24,33 +26,18 @@ export default function Index() {
   const store = useMemo(() => (supabase && userId ? createSupabaseStore(supabase, userId) : null), [userId])
   const { state, actions, status } = useBudget(store)
   useBankLive(userId, actions.setTotalBalance)
-  const [tab, setTab] = useState<TabId>("board")
+  const [tab, setTab] = useState<TabId>("total")
   // Back from an OAuth bank login? Re-open the Profile sheet so Plaid Link can finish.
   const [profileOpen, setProfileOpen] = useState(isOAuthReturn)
   const email = auth.session?.user.email ?? null
 
   // Once any bank is connected, Spend comes from real transactions this
   // calendar month instead of the manual plan — see summarize()'s `actual` param.
-  const [hasBank, setHasBank] = useState(false)
-  useEffect(() => {
-    const load = () => void readSavedAccounts().then((a) => setHasBank(a.length > 0))
-    load()
-    window.addEventListener(BANK_UPDATED_EVENT, load)
-    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
-  }, [])
-  const txs = useTransactions(45)
-  const [overrides, setOverrides] = useState<CategoryOverrides>({})
-  useEffect(() => {
-    const load = () => void readCategoryOverrides().then(setOverrides)
-    load()
-    window.addEventListener(BANK_UPDATED_EVENT, load)
-    return () => window.removeEventListener(BANK_UPDATED_EVENT, load)
-  }, [])
-  const actual = useMemo(() => (hasBank ? actualByCategory(txs ?? [], monthKey(new Date()), overrides) : undefined), [hasBank, txs, overrides])
+  const data = useTrackerData()
+  const hasBank = data.accounts.length > 0
+  const actual = useMemo(() => (hasBank ? actualByCategory(data.txs ?? [], monthKey(new Date()), data.overrides) : undefined), [hasBank, data.txs, data.overrides])
 
   const summary = useMemo(() => summarize(state, actual), [state, actual])
-
-  const TITLES: Record<TabId, string> = { board: "Overview", income: "Income", spend: "Spending", goals: "Goals" }
 
   const go = (t: TabId) => {
     setTab(t)
@@ -93,13 +80,25 @@ export default function Index() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,transparent_40%,color-mix(in_srgb,var(--muted-foreground)_25%,transparent)_100%)]" data-oid="ff3770c16b" />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background/70 sm:border-x-4 sm:border-foreground" data-oid="521d31b0ed">
-        <BoardHeader key={tab === "board" ? "full" : "compact"} summary={summary} balance={state.totalBalance} onBalanceChange={actions.setTotalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={tab === "board" ? undefined : TITLES[tab]} />
-        <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "board"} data-oid="3b731a21a4" data-oid-text-editable="false" data-oid-text-source="expression:11ce88c87ab1|expression:ddb668d99f8e|expression:845f94a604ae|expression:0b339fb54855|expression:2096696fd22d">
-          {tab === "board" ? <BoardOverview state={state} summary={summary} onNavigate={go} onOpenProfile={() => setProfileOpen(true)} /> : null}
-
-          {tab === "income" ? <IncomePanel state={state} summary={summary} actions={actions} /> : null}
-          {tab === "spend" ? <SpendingBoard state={state} summary={summary} actions={actions} /> : null}
-          {tab === "goals" ? <GoalsPanel state={state} summary={summary} actions={actions} /> : null}
+        {tab === "total" ? (
+          <header className="flex items-center justify-between gap-ds-sm px-ds-md pb-ds-sm pt-[calc(env(safe-area-inset-top)+16px)]">
+            <p className="font-label text-label font-bold uppercase text-muted-foreground">My money</p>
+            <button
+              type="button"
+              onClick={() => setProfileOpen(true)}
+              aria-label="Profile and settings"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full border-4 border-foreground bg-card font-heading text-[20px] font-extrabold uppercase text-foreground transition-[scale] duration-150 active:scale-90"
+            >
+              {email ? email[0] : <UserRound className="size-6" strokeWidth={2.5} />}
+            </button>
+          </header>
+        ) : (
+          <BoardHeader key="compact" summary={summary} balance={state.totalBalance} onBalanceChange={actions.setTotalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={TITLES[tab]} />
+        )}
+        <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "total"}>
+          {tab === "total" ? <TotalTab data={data} state={state} actions={actions} onOpenProfile={() => setProfileOpen(true)} /> : null}
+          {tab === "spend" ? <SpendTab data={data} state={state} actions={actions} onOpenProfile={() => setProfileOpen(true)} /> : null}
+          {tab === "income" ? <IncomeTab data={data} state={state} actions={actions} onOpenProfile={() => setProfileOpen(true)} /> : null}
         </div>
         <TabBar tab={tab} onChange={go} />
         <ProfileSheet
@@ -118,6 +117,9 @@ export default function Index() {
           mfaVerified={auth.mfaVerified}
           onMfaChanged={() => void auth.refreshAal()}
           onDeleted={() => void signOut()}
+          state={state}
+          summary={summary}
+          actions={actions}
         />
       </div>
     </main>

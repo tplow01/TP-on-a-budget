@@ -7,6 +7,10 @@ import { Link } from "react-router-dom"
 import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
 import { BankSection } from "./BankSection"
+import { ManualAccountsSection } from "../tracker/ManualAccountsSection"
+import { TaxEstimateSection } from "../tracker/TaxEstimateSection"
+import type { BudgetState, Summary } from "../../lib/budget"
+import type { BudgetActions } from "../../hooks/useBudget"
 
 interface Props {
   open: boolean
@@ -25,6 +29,9 @@ interface Props {
   onMfaChanged: () => void
   /** Called after the account has been deleted on the server. */
   onDeleted: () => void
+  state: BudgetState
+  summary: Summary
+  actions: BudgetActions
 }
 
 const STATUS_TEXT: Record<SyncStatus, string> = {
@@ -43,7 +50,7 @@ const SHEET = {
   transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] as const },
 }
 
-export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted }: Props) {
+export function ProfileSheet({ open, onClose, configured, email, status, updatedAt, onSignIn, onSignOut, onRetry, onReset, onBankTotal, mfaEnabled, mfaVerified, onMfaChanged, onDeleted, state, summary, actions }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const removeAccount = async () => {
@@ -111,6 +118,10 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                 {configured && email ? <MfaSection enabled={mfaEnabled} onChanged={onMfaChanged} /> : null}
 
                 {configured && email ? <BankSection onTotal={onBankTotal} mfaReady={mfaVerified} /> : null}
+
+                <ManualAccountsSection />
+
+                <TaxEstimateSection state={state} summary={summary} actions={actions} />
 
                 {/* Sync */}
                 <section className="border-4 border-foreground bg-card" data-oid="cc282666e5">

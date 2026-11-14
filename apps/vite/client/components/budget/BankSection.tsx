@@ -78,6 +78,7 @@ export function BankSection({ onTotal, mfaReady }: { onTotal: (total: number) =>
       clearLinkToken()
       clearOAuthParams()
       void run("Linking", async () => {
+        if (!publicToken) throw new Error("Bank link returned no token")
         const { accounts } = await exchangePublicToken(publicToken, metadata.institution?.name ?? null)
         apply(accounts)
         success()
