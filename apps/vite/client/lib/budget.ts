@@ -454,55 +454,6 @@ export function createDefaultState(): BudgetState {
   }
 }
 
-/** Example budget, handy for trying the app out. */
-export function createSampleState(): BudgetState {
-  return {
-    version: 1,
-    income: {
-      grossAnnual: 85000,
-      retirementPct: 6,
-      stateTaxPct: 5,
-      preTaxDeductionsMonthly: 180,
-      postTaxDeductionsMonthly: 0,
-      overrideEnabled: false,
-      overrideMonthly: 0,
-      payFrequency: "fortnightly",
-      nextPayday: "",
-    },
-    items: [
-      item("fixed", "Rent", 1800, "monthly"),
-      item("variable", "Utilities", 140, "monthly"),
-      item("variable", "Internet", 60, "monthly"),
-      item("variable", "Phone bill", 45, "monthly", false),
-      item("fixed", "Car insurance", 1200, "yearly"),
-      item("food", "Groceries", 110, "weekly"),
-      item("food", "Work lunches", 40, "weekly"),
-      item("food", "Takeaway", 30, "weekly"),
-      item("lifestyle", "Going out", 60, "weekly"),
-      item("lifestyle", "Transport", 35, "weekly"),
-      item("lifestyle", "Streaming", 25, "monthly"),
-      item("lifestyle", "Clothing", 600, "yearly"),
-      item("lifestyle", "Holidays", 2400, "yearly"),
-      item("health", "Gym", 55, "monthly"),
-      item("health", "Dental", 300, "yearly"),
-      item("health", "Prescriptions", 15, "monthly"),
-      item("buffer", "Unexpected", 150, "monthly"),
-      item("buffer", "Gifts", 500, "yearly"),
-    ],
-    goals: {
-      savingsName: "House deposit",
-      savingsTarget: 30000,
-      savingsSaved: 6500,
-      savingsMonthly: 400,
-      emergencyMonths: 3,
-      emergencySaved: 4000,
-      emergencyMonthly: 250,
-    },
-    totalBalance: 12500,
-    updatedAt: new Date().toISOString(),
-  }
-}
-
 /** Merge possibly-partial persisted data onto defaults so old saves never crash. */
 export function normalizeState(raw: unknown): BudgetState {
   const def = createDefaultState()

@@ -4,12 +4,12 @@ import { Trash2 } from "lucide-react"
 import { deleteAccount } from "../../lib/plaid"
 import { MfaSection } from "./MfaSection"
 import { Link } from "react-router-dom"
-import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
+import { Cloud, CloudOff, Download, LogIn, LogOut, RefreshCw, RotateCcw, UserRound, X } from "lucide-react"
 import type { SyncStatus } from "../../hooks/useBudget"
 import { BankSection } from "./BankSection"
 import { ManualAccountsSection } from "../tracker/ManualAccountsSection"
 import { TaxEstimateSection } from "../tracker/TaxEstimateSection"
-import type { BudgetState, Summary } from "../../lib/budget"
+import { downloadCsv, type BudgetState, type Summary } from "../../lib/budget"
 import type { BudgetActions } from "../../hooks/useBudget"
 
 interface Props {
@@ -151,6 +151,10 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
                   </div>
                   <div className="space-y-ds-sm p-ds-md" data-oid="b8ef9d3228" data-oid-text-editable="false" data-oid-text-source="element:p|element:button|expression:2a6695e1b7c7">
                     <p className="font-body text-[14px] leading-snug text-muted-foreground" data-oid="62572db300">Clear everything and start from a blank budget. If you're signed in, this applies on all your devices.</p>
+                    <button type="button" onClick={() => downloadCsv(state)} className="ds-button min-h-[56px] w-full border-2 border-foreground bg-card text-foreground">
+                      <Download className="size-5" strokeWidth={2.5} />
+                      Export CSV
+                    </button>
                     <button
                       type="button"
                       onClick={() => {

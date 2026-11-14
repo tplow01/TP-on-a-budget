@@ -93,7 +93,7 @@ export default function Index() {
             </button>
           </header>
         ) : (
-          <BoardHeader key="compact" summary={summary} balance={state.totalBalance} onBalanceChange={actions.setTotalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={TITLES[tab]} />
+          <BoardHeader key="compact" summary={summary} balance={state.totalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={TITLES[tab]} />
         )}
         <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "total"}>
           {tab === "total" ? <TotalTab data={data} state={state} actions={actions} onOpenProfile={() => setProfileOpen(true)} /> : null}
