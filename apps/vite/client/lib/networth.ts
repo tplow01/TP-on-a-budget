@@ -66,7 +66,11 @@ export async function readSnapshots(sinceIso: string): Promise<Snapshot[]> {
     .gte("day", sinceIso)
     .order("day", { ascending: true })
   if (error || !data) return []
-  return data as Snapshot[]
+  return data.map((r) => ({
+    ...r,
+    current: r.current == null ? null : Number(r.current),
+    available: r.available == null ? null : Number(r.available),
+  })) as Snapshot[]
 }
 
 export async function readManualAccounts(): Promise<ManualAccount[]> {
@@ -81,10 +85,12 @@ export async function upsertManualAccount(a: Omit<ManualAccount, "updated_at" | 
   const { data: auth } = await supabase.auth.getUser()
   if (!auth.user) return
   const row = { ...a, user_id: auth.user.id, updated_at: new Date().toISOString() }
-  await supabase.from("manual_accounts").upsert(row)
+  const { error } = await supabase.from("manual_accounts").upsert(row)
+  if (error) throw error
 }
 
 export async function deleteManualAccount(id: string): Promise<void> {
   if (!supabase) return
-  await supabase.from("manual_accounts").delete().eq("id", id)
+  const { error } = await supabase.from("manual_accounts").delete().eq("id", id)
+  if (error) throw error
 }
