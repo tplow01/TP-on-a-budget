@@ -11,7 +11,7 @@ export function ManualAccountsSection() {
   const [error, setError] = useState<string | null>(null)
 
   // Edits in flight (debounce timers + pending upserts): never overwrite local state from a reload meanwhile.
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+  const timers = useRef(new Map<string, { h: ReturnType<typeof setTimeout>; row: ManualAccount }>())
   const inflight = useRef(0)
 
   useEffect(() => {
@@ -29,7 +29,11 @@ export function ManualAccountsSection() {
   }, [])
   useEffect(() => {
     const t = timers.current
-    return () => t.forEach((h) => clearTimeout(h))
+    return () =>
+      t.forEach(({ h, row }) => {
+        clearTimeout(h)
+        void upsertManualAccount({ id: row.id, name: row.name, type: row.type, balance: row.balance }).catch(() => {})
+      })
   }, [])
 
   const notify = () => window.dispatchEvent(new Event(BANK_UPDATED_EVENT))
@@ -52,17 +56,18 @@ export function ManualAccountsSection() {
     setAccounts((list) => list.map((x) => (x.id === a.id ? next : x)))
     setError(null)
     const old = timers.current.get(a.id)
-    if (old) clearTimeout(old)
-    timers.current.set(
-      a.id,
-      setTimeout(() => {
-        timers.current.delete(a.id)
-        void persist(next)
-      }, 500),
-    )
+    if (old) clearTimeout(old.h)
+    const h = setTimeout(() => {
+      timers.current.delete(a.id)
+      void persist(next)
+    }, 500)
+    timers.current.set(a.id, { h, row: next })
   }
 
   const remove = async (id: string) => {
+    const pending = timers.current.get(id)
+    if (pending) clearTimeout(pending.h)
+    timers.current.delete(id)
     setError(null)
     try {
       await deleteManualAccount(id)
