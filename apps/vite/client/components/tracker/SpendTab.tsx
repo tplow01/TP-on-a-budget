@@ -58,7 +58,7 @@ export function SpendTab({ data }: Props) {
   const oneOffMonth = oneOff.filter((t) => t.date.slice(0, 7) === month)
 
   const recategorise = (id: string, c: CategoryId) => {
-    void setCategoryOverride(id, c).then(() => window.dispatchEvent(new Event(BANK_UPDATED_EVENT)))
+    void setCategoryOverride(id, c).then(() => window.dispatchEvent(new Event(BANK_UPDATED_EVENT))).catch(() => {})
   }
   const rowsFor = (key: string, category: CategoryId | null): Txn[] =>
     txs.filter((t) => t.date.slice(0, 7) === month && Number(t.amount) > 0 && merchantKey(t) === key && (category === null ? categoryOf(t, overrides) !== null : categoryOf(t, overrides) === category))

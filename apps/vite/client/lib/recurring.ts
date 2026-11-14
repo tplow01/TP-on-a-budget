@@ -15,7 +15,7 @@ const DAY = 86400000
 const dayNum = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / DAY
 const addDays = (iso: string, n: number) => new Date((dayNum(iso) + n) * DAY).toISOString().slice(0, 10)
 
-export function detectRecurring(txs: Txn[], overrides?: CategoryOverrides): { recurring: RecurringGroup[]; oneOff: Txn[] } {
+export function detectRecurring(txs: Txn[], overrides?: CategoryOverrides, now: Date = new Date()): { recurring: RecurringGroup[]; oneOff: Txn[] } {
   const byKey = new Map<string, Txn[]>()
   for (const t of txs) {
     if (!(Number(t.amount) > 0) || categoryOf(t, overrides) === null) continue
@@ -25,6 +25,7 @@ export function detectRecurring(txs: Txn[], overrides?: CategoryOverrides): { re
     else byKey.set(key, [t])
   }
 
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
   const recurring: RecurringGroup[] = []
   const oneOff: Txn[] = []
   for (const [key, list] of byKey) {
@@ -42,13 +43,18 @@ export function detectRecurring(txs: Txn[], overrides?: CategoryOverrides): { re
       continue
     }
     const last = sorted[sorted.length - 1].date
+    const nextExpected = addDays(last, cadence === "weekly" ? 7 : 30)
+    if (dayNum(nextExpected) < dayNum(todayIso) - 7) {
+      oneOff.push(...sorted)
+      continue
+    }
     recurring.push({
       key,
       cadence,
       avgAmount: mean,
       count: sorted.length,
       last,
-      nextExpected: addDays(last, cadence === "weekly" ? 7 : 30),
+      nextExpected,
       txns: sorted,
     })
   }

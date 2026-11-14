@@ -33,7 +33,9 @@ export function TotalTab({ data, onOpenProfile }: Props) {
 
   const { total, byBucket } = totalOf(accounts, manual)
   const manualTotal = totalOf([], manual).total
-  const series = daySeries(snapshots, manualTotal)
+  const linked = new Set(accounts.map((a) => a.account_id))
+  const liveSnaps = snapshots.filter((s) => linked.has(s.account_id))
+  const series = daySeries(liveSnaps, manualTotal)
   const delta = monthDelta(series)
 
   const list = txs ?? []
@@ -47,6 +49,24 @@ export function TotalTab({ data, onOpenProfile }: Props) {
 
   const bankRows = (b: Bucket) => accounts.filter((a) => bucketOf(a.type) === b)
   const manualRows = (b: Bucket) => manual.filter((m) => bucketOf(manualType(m)) === b)
+
+  if (empty) {
+    return (
+      <div className="space-y-ds-md">
+        <div className="space-y-ds-sm rounded-md border-2 border-dashed border-foreground p-ds-md">
+          <p className="font-label text-label font-bold uppercase">Link a bank</p>
+          <p className="font-caption text-caption text-muted-foreground">Nothing linked yet. Link a bank to see your balances, spending and income here.</p>
+          <button type="button" onClick={onOpenProfile} className="ds-button ds-button-primary min-h-[56px] w-full border-2 border-foreground">Link a bank</button>
+        </div>
+      </div>
+    )
+  }
+
+  const loadingNotice = (
+    <div className="rounded-md border-2 border-dashed border-foreground p-ds-md">
+      <p className="font-caption text-caption text-muted-foreground">Loading transactions…</p>
+    </div>
+  )
 
   return (
     <div className="space-y-ds-md">
@@ -71,6 +91,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
         </div>
       </section>
 
+      {txs === null ? loadingNotice : (
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]">
         <div className="grid grid-cols-2 gap-ds-sm p-ds-md">
           <div className="border-2 border-foreground bg-success p-ds-sm text-success-foreground">
@@ -87,6 +108,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
           </div>
         </div>
       </section>
+      )}
 
       {empty ? (
         <div className="space-y-ds-sm rounded-md border-2 border-dashed border-foreground p-ds-md">
@@ -140,6 +162,7 @@ export function TotalTab({ data, onOpenProfile }: Props) {
         </section>
       )}
 
+      {txs === null ? null : (
       <section className="border-4 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]">
         <div className="flex items-center justify-between gap-ds-sm border-b-4 border-foreground bg-[hsl(199_60%_45%)] px-ds-md py-ds-sm text-primary-foreground">
           <h3 className="font-label text-[15px] font-extrabold uppercase tracking-[0.06em]">At this rate</h3>
@@ -150,9 +173,10 @@ export function TotalTab({ data, onOpenProfile }: Props) {
           <p className="font-caption text-caption text-muted-foreground">Today's total plus what the rest of {now.toLocaleDateString(undefined, { month: "long" })} is on track to add. Early in the month this is noisy.</p>
         </div>
       </section>
+      )}
 
       <AnimatePresence>
-        {open ? <AccountDetail key={"account_id" in open ? open.account_id : open.id} account={open} txs={list} snapshots={snapshots} onClose={() => setOpen(null)} /> : null}
+        {open ? <AccountDetail key={"account_id" in open ? open.account_id : open.id} account={open} txs={list} snapshots={liveSnaps} onClose={() => setOpen(null)} /> : null}
       </AnimatePresence>
     </div>
   )

@@ -12,17 +12,23 @@ function isoDaysAgo(days: number) {
 }
 
 /** One shared read of everything the three tabs need; re-reads whenever bank data changes. */
-export function useTrackerData() {
-  const txs = useTransactions(90)
+export function useTrackerData(userId: string | null) {
+  const txs = useTransactions(90, userId)
   const [overrides, setOverrides] = useState<CategoryOverrides>({})
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [manual, setManual] = useState<ManualAccount[]>([])
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
-  const [tick, setTick] = useState(0)
-  const reload = useCallback(() => setTick((t) => t + 1), [])
+  const reload = useCallback(() => window.dispatchEvent(new Event(BANK_UPDATED_EVENT)), [])
 
   useEffect(() => {
     let live = true
+    if (!userId) {
+      setOverrides({})
+      setAccounts([])
+      setManual([])
+      setSnapshots([])
+      return
+    }
     const load = () => {
       void readCategoryOverrides().then((v) => live && setOverrides(v))
       void readSavedAccounts().then((v) => live && setAccounts(v))
@@ -35,7 +41,7 @@ export function useTrackerData() {
       live = false
       window.removeEventListener(BANK_UPDATED_EVENT, load)
     }
-  }, [tick])
+  }, [userId])
 
   return { txs, overrides, accounts, manual, snapshots, reload }
 }

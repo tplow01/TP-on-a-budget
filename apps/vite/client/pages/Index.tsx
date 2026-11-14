@@ -11,7 +11,8 @@ import { isOAuthReturn } from "../lib/plaid"
 import { UserRound } from "lucide-react"
 import { useBankLive } from "../hooks/useBankLive"
 import { useTrackerData } from "../hooks/useTrackerData"
-import { actualByCategory, monthKey } from "../lib/transactions"
+import { actualByCategory, incomeTxns, monthKey } from "../lib/transactions"
+import { totalOf } from "../lib/networth"
 import { BoardHeader } from "../components/budget/BoardHeader"
 import { TabBar, type TabId } from "../components/budget/TabBar"
 import { TotalTab } from "../components/tracker/TotalTab"
@@ -31,13 +32,17 @@ export default function Index() {
   const [profileOpen, setProfileOpen] = useState(isOAuthReturn)
   const email = auth.session?.user.email ?? null
 
-  // Once any bank is connected, Spend comes from real transactions this
-  // calendar month instead of the manual plan — see summarize()'s `actual` param.
-  const data = useTrackerData()
-  const hasBank = data.accounts.length > 0
-  const actual = useMemo(() => (hasBank ? actualByCategory(data.txs ?? [], monthKey(new Date()), data.overrides) : undefined), [hasBank, data.txs, data.overrides])
+  const data = useTrackerData(userId)
+  const month = monthKey(new Date())
+  const total = useMemo(() => totalOf(data.accounts, data.manual).total, [data.accounts, data.manual])
+  const net = useMemo(() => {
+    const list = data.txs ?? []
+    const inTotal = incomeTxns(list, month).reduce((s, i) => s + i.amount, 0)
+    const outTotal = Object.values(actualByCategory(list, month, data.overrides)).reduce((x, y) => x + y, 0)
+    return inTotal - outTotal
+  }, [data.txs, data.overrides, month])
 
-  const summary = useMemo(() => summarize(state, actual), [state, actual])
+  const summary = useMemo(() => summarize(state), [state])
 
   const go = (t: TabId) => {
     setTab(t)
@@ -93,7 +98,7 @@ export default function Index() {
             </button>
           </header>
         ) : (
-          <BoardHeader key="compact" summary={summary} balance={state.totalBalance} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={TITLES[tab]} />
+          <BoardHeader key="compact" total={total} net={net} monthLabel={new Date().toLocaleDateString(undefined, { month: "short" })} profileInitial={email ? email[0] : null} onOpenProfile={() => setProfileOpen(true)} compactTitle={TITLES[tab]} />
         )}
         <div className="flex-1 px-ds-md pb-[170px] data-[compact=true]:pt-ds-lg" data-compact={tab !== "total"}>
           {tab === "total" ? <TotalTab data={data} state={state} actions={actions} onOpenProfile={() => setProfileOpen(true)} /> : null}

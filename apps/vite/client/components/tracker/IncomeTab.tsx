@@ -116,7 +116,7 @@ export function IncomeTab({ data, state }: Props) {
           ) : (
             <p className="font-body text-[14px]">
               {pattern.count} deposits in 90 days
-              {pattern.avgGapDays !== null ? ` · about every ${Math.round(pattern.avgGapDays)} days` : ""} · avg {fmt(pattern.avgAmount)}
+              {pattern.avgGapDays !== null ? ` · about every ${Math.max(1, Math.round(pattern.avgGapDays))} days` : ""} · avg {fmt(pattern.avgAmount)}
             </p>
           )}
         </div>

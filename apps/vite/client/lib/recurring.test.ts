@@ -15,6 +15,7 @@ const tx = (o: Partial<Txn>): Txn => ({
   pending: false,
   ...o,
 })
+const NOW = new Date(2026, 10, 13)
 const food = { pfc_primary: "FOOD_AND_DRINK" }
 
 describe("detectRecurring", () => {
@@ -23,7 +24,7 @@ describe("detectRecurring", () => {
       tx({ ...food, merchant_name: "Netflix", amount: 15.49, date: "2026-11-09" }),
       tx({ ...food, merchant_name: "Netflix", amount: 15.49, date: "2026-10-10" }),
     ]
-    const r = detectRecurring(txs)
+    const r = detectRecurring(txs, undefined, NOW)
     expect(r.recurring).toHaveLength(1)
     expect(r.recurring[0].cadence).toBe("monthly")
     expect(r.recurring[0].key).toBe("Netflix")
@@ -37,7 +38,7 @@ describe("detectRecurring", () => {
       tx({ ...food, merchant_name: "Shop", amount: 40, date: "2026-10-10" }),
       tx({ ...food, merchant_name: "Shop", amount: 40, date: "2026-10-11" }),
     ]
-    const r = detectRecurring(txs)
+    const r = detectRecurring(txs, undefined, NOW)
     expect(r.recurring).toHaveLength(0)
     expect(r.oneOff).toHaveLength(2)
   })
@@ -46,14 +47,14 @@ describe("detectRecurring", () => {
       tx({ ...food, merchant_name: "Utility", amount: 50, date: "2026-09-10" }),
       tx({ ...food, merchant_name: "Utility", amount: 70, date: "2026-10-10" }),
     ]
-    expect(detectRecurring(txs).recurring).toHaveLength(0)
+    expect(detectRecurring(txs, undefined, NOW).recurring).toHaveLength(0)
   })
   it("detects weekly cadence", () => {
     const txs = [
       tx({ ...food, merchant_name: "Gym", amount: 5, date: "2026-11-01" }),
       tx({ ...food, merchant_name: "Gym", amount: 5, date: "2026-11-08" }),
     ]
-    const r = detectRecurring(txs)
+    const r = detectRecurring(txs, undefined, NOW)
     expect(r.recurring[0].cadence).toBe("weekly")
     expect(r.recurring[0].nextExpected).toBe("2026-11-15")
   })
@@ -63,7 +64,16 @@ describe("detectRecurring", () => {
       tx({ ...food, merchant_name: "A", date: "2026-10-01" }),
       tx({ ...food, merchant_name: "B", date: "2026-10-05" }),
     ]
-    const r = detectRecurring(txs)
+    const r = detectRecurring(txs, undefined, NOW)
     expect(r.oneOff.map((t) => t.merchant_name)).toEqual(["B", "A"])
+  })
+  it("drops a monthly group whose last charge was 60 days ago", () => {
+    const txs = [
+      tx({ ...food, merchant_name: "OldGym", amount: 20, date: "2026-08-14" }),
+      tx({ ...food, merchant_name: "OldGym", amount: 20, date: "2026-09-14" }),
+    ]
+    const r = detectRecurring(txs, undefined, NOW)
+    expect(r.recurring).toHaveLength(0)
+    expect(r.oneOff).toHaveLength(2)
   })
 })

@@ -33,6 +33,14 @@ describe("daySeries", () => {
   })
 })
 
+describe("daySeries future snapshots", () => {
+  it("counts a snapshot dated tomorrow as today", () => {
+    const today = new Date(2026, 10, 4)
+    const s = daySeries([{ account_id: "a", day: "2026-11-03", current: 100, available: null, type: "depository" }, { account_id: "a", day: "2026-11-05", current: 300, available: null, type: "depository" }], 0, today)
+    expect(s[s.length - 1]).toEqual({ day: "2026-11-04", total: 300 })
+  })
+})
+
 describe("monthDelta", () => {
   it("is null with no entry this month", () => {
     expect(monthDelta([{ day: "2026-10-30", total: 5 }], new Date(2026, 10, 4))).toBeNull()

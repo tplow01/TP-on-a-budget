@@ -31,9 +31,10 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 
 export function daySeries(snaps: Snapshot[], manualTotal: number, today: Date = new Date()): Array<{ day: string; total: number }> {
   if (!snaps.length) return []
-  const sorted = [...snaps].sort((a, b) => a.day.localeCompare(b.day))
-  const [y, m, d] = sorted[0].day.split("-").map(Number)
   const end = iso(today)
+  // Snapshots stamped after today (UTC evening syncs) count as today.
+  const sorted = snaps.map((s) => (s.day > end ? { ...s, day: end } : s)).sort((a, b) => a.day.localeCompare(b.day))
+  const [y, m, d] = sorted[0].day.split("-").map(Number)
   const latest = new Map<string, number>()
   const out: Array<{ day: string; total: number }> = []
   let i = 0
