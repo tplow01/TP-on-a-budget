@@ -119,7 +119,7 @@ export function ProfileSheet({ open, onClose, configured, email, status, updated
 
                 {configured && email ? <BankSection onTotal={onBankTotal} mfaReady={mfaVerified} /> : null}
 
-                <ManualAccountsSection />
+                {configured && email ? <ManualAccountsSection /> : null}
 
                 <TaxEstimateSection state={state} summary={summary} actions={actions} />
 

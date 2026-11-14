@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { BANK_UPDATED_EVENT } from "../../lib/transactions"
 import { deleteManualAccount, readManualAccounts, upsertManualAccount, type ManualAccount } from "../../lib/networth"
@@ -10,9 +10,16 @@ export function ManualAccountsSection() {
   const [accounts, setAccounts] = useState<ManualAccount[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  // Edits in flight (debounce timers + pending upserts): never overwrite local state from a reload meanwhile.
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>())
+  const inflight = useRef(0)
+
   useEffect(() => {
     let live = true
-    const load = () => void readManualAccounts().then((a) => live && setAccounts(a))
+    const load = () => {
+      if (timers.current.size > 0 || inflight.current > 0) return
+      void readManualAccounts().then((a) => live && timers.current.size === 0 && inflight.current === 0 && setAccounts(a))
+    }
     load()
     window.addEventListener(BANK_UPDATED_EVENT, load)
     return () => {
@@ -20,19 +27,39 @@ export function ManualAccountsSection() {
       window.removeEventListener(BANK_UPDATED_EVENT, load)
     }
   }, [])
+  useEffect(() => {
+    const t = timers.current
+    return () => t.forEach((h) => clearTimeout(h))
+  }, [])
 
   const notify = () => window.dispatchEvent(new Event(BANK_UPDATED_EVENT))
 
-  const save = async (a: ManualAccount, patch: Partial<Pick<ManualAccount, "name" | "type" | "balance">>) => {
+  const persist = async (a: ManualAccount) => {
+    inflight.current += 1
+    try {
+      await upsertManualAccount({ id: a.id, name: a.name, type: a.type, balance: a.balance })
+      inflight.current -= 1
+      notify()
+    } catch (e) {
+      inflight.current -= 1
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  // Apply the edit locally at once; persist after a short pause so typing isn't interrupted.
+  const save = (a: ManualAccount, patch: Partial<Pick<ManualAccount, "name" | "type" | "balance">>) => {
     const next = { ...a, ...patch }
     setAccounts((list) => list.map((x) => (x.id === a.id ? next : x)))
     setError(null)
-    try {
-      await upsertManualAccount({ id: a.id, name: next.name, type: next.type, balance: next.balance })
-      notify()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    }
+    const old = timers.current.get(a.id)
+    if (old) clearTimeout(old)
+    timers.current.set(
+      a.id,
+      setTimeout(() => {
+        timers.current.delete(a.id)
+        void persist(next)
+      }, 500),
+    )
   }
 
   const remove = async (id: string) => {
@@ -71,7 +98,7 @@ export function ManualAccountsSection() {
                 defaultValue={a.name}
                 onBlur={(e) => {
                   const v = e.target.value.trim()
-                  if (v && v !== a.name) void save(a, { name: v })
+                  if (v && v !== a.name) save(a, { name: v })
                 }}
                 className="min-h-[48px] min-w-0 flex-1 rounded-md border-2 border-foreground bg-card px-ds-sm font-body text-[16px]"
               />
@@ -83,7 +110,7 @@ export function ManualAccountsSection() {
               <select
                 aria-label="Account type"
                 value={a.type}
-                onChange={(e) => void save(a, { type: e.target.value as ManualType })}
+                onChange={(e) => save(a, { type: e.target.value as ManualType })}
                 className="min-h-[56px] w-full rounded-md border-2 border-foreground bg-card px-ds-sm font-caption text-[16px]"
               >
                 <option value="cash">Cash</option>
@@ -91,7 +118,7 @@ export function ManualAccountsSection() {
                 <option value="credit">Credit</option>
                 <option value="other">Other</option>
               </select>
-              <NumberInput value={a.balance} onChange={(v) => void save(a, { balance: v })} prefix="$" ariaLabel="Balance" />
+              <NumberInput value={a.balance} onChange={(v) => save(a, { balance: v })} prefix="$" ariaLabel="Balance" />
             </div>
           </div>
         ))}
